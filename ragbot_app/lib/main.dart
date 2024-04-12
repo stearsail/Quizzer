@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:ragbot_app/Controllers/mainscreen_controller.dart';
+import 'package:ragbot_app/Controllers/upload_controller.dart';
 import 'package:ragbot_app/Themes/dark_theme.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -17,9 +18,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        theme: darkTheme,
-        home: ChangeNotifierProvider(
-            create: (context) => MainScreenController(), child: MainScreen()));
+      theme: darkTheme,
+      home: MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MainScreenController>(
+              create: (context) => MainScreenController()),
+          ChangeNotifierProvider<UploaderViewController>(
+              create: (context) => UploaderViewController())
+        ],
+        child: MainScreen(),
+      ),
+    );
   }
 }
 
@@ -54,6 +63,8 @@ class _MainScreenState extends State<MainScreen>
   @override
   Widget build(BuildContext context) {
     final panelHeightOpen = MediaQuery.of(context).size.height * 0.4;
+    final uploaderViewController =
+        Provider.of<UploaderViewController>(context, listen: false);
     return Scaffold(
       backgroundColor: const Color(0xFF3E3E3E),
       appBar: AppBar(title: const Text('Main screen')),
@@ -121,27 +132,54 @@ class _MainScreenState extends State<MainScreen>
             isDraggable: false,
             parallaxEnabled: true,
             controller: panelController,
-            color: Color(0xFF6738FF),
+            backdropEnabled: true,
             defaultPanelState: PanelState.CLOSED,
             minHeight: 0,
+            color: Color(0xFF6738FF),
             maxHeight: panelHeightOpen,
-            panel: Container(
-              height: 400,
-              width: 400,
-              child: SizedBox(
-                height: 100,
-                child: FittedBox(
-                  child: ElevatedButton.icon(
-                    style: const ButtonStyle(
-                        backgroundColor:
-                            MaterialStatePropertyAll(Color(0xFF6738FF))),
-                    onPressed: () => null,
-                    label: const Text("Upload file"),
-                    icon: const Icon(Icons.upload),
-                  ),
-                ),
-              ),
-            ),
+            panel: Consumer<UploaderViewController>(
+                builder: (context, uploaderViewController, child) {
+              return Center(
+                child: !uploaderViewController.fileUploaded
+                    ? Container(
+                        child: SizedBox(
+                          height: 85,
+                          child: FittedBox(
+                            child: ElevatedButton.icon(
+                              style: const ButtonStyle(
+                                  backgroundColor: MaterialStatePropertyAll(
+                                      Color(0xFF3E3E3E))),
+                              onPressed: () {
+                                uploaderViewController.uploadFile();
+                              },
+                              label: const Text("Upload file"),
+                              icon: const Icon(Icons.upload),
+                            ),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.file_copy,
+                              size: 120,
+                              color: Colors.white,
+                            ),
+                            Text(
+                              uploaderViewController.uploadedFilePath!,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+              );
+            }),
           )
         ],
       ),
