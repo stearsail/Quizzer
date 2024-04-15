@@ -9,46 +9,43 @@ class UploaderViewController extends ChangeNotifier {
     _fileUploaded = fileUploaded;
     notifyListeners();
   }
+
   String? uploadedFilePath = '';
-  final String _uri = "http://0.0.0.0:8000";
+  final String _uri = "http://10.0.2.2:8000";
 
   void uploadFile() async {
-    try {
-      //select file to upload
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-          type: FileType.custom,
-          dialogTitle: "Select .pdf file",
-          allowMultiple: false,
-          allowedExtensions: ['pdf'],
-          lockParentWindow: false);
-      if (result != null) {
-        uploadedFilePath = result.files.first.path;
-        await _uploadFileToServer();
-      }
-    } catch (ex) {}
+    //select file to upload
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        dialogTitle: "Select .pdf file",
+        allowMultiple: false,
+        allowedExtensions: ['pdf'],
+        lockParentWindow: false);
+    if (result != null) {
+      uploadedFilePath = result.files.first.path;
+      await _uploadFileToServer();
+    }
   }
 
   Future<void> _uploadFileToServer() async {
-    
-      //upload file to fastapi endpoint
-      //define uri and multipart request
-      Uri uploadUri = Uri.parse('$_uri/upload-pdf');
-      MultipartRequest request = MultipartRequest('POST', uploadUri);
-      
-      //attach file to request {'filename' : '<the path>'}
-      request.files.add(await MultipartFile.fromPath('filename', uploadedFilePath!));
+    //upload file to fastapi endpoint
+    //define uri and multipart request
+    Uri uploadUri = Uri.parse('$_uri/upload-pdf');
+    MultipartRequest request = MultipartRequest('POST', uploadUri);
 
-      //send request
-      StreamedResponse response = await request.send();
+    //attach file to request {'filename' : '<the path>'}
+    request.files.add(await MultipartFile.fromPath('file', uploadedFilePath!));
 
-      if(response.statusCode == 200){
-        //is successful
-        fileUploaded = true;
-      }else{
-        //temporar
-        fileUploaded = true;
-        uploadedFilePath = "error";
-      }
-    
+    //send request
+    StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      //is successful
+      fileUploaded = true;
+    } else {
+      //temporar
+      fileUploaded = true;
+      uploadedFilePath = "error";
+    }
   }
 }

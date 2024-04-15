@@ -170,10 +170,9 @@ class _MainScreenState extends State<MainScreen>
                             Text(
                               uploaderViewController.uploadedFilePath!,
                               style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold
-                              ),
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
