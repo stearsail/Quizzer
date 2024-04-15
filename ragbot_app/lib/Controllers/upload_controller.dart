@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
@@ -37,11 +38,15 @@ class UploaderViewController extends ChangeNotifier {
     request.files.add(await MultipartFile.fromPath('file', uploadedFilePath!));
 
     //send request
-    StreamedResponse response = await request.send();
+    StreamedResponse streamedResponse = await request.send();
 
-    if (response.statusCode == 200) {
+    if (streamedResponse.statusCode == 200) {
       //is successful
       fileUploaded = true;
+      var response = await Response.fromStream(streamedResponse);
+      String responseBody = response.body;
+      var questions = json.decode(responseBody);
+      print(questions);
     } else {
       //temporar
       fileUploaded = true;
