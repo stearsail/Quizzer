@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:ragbot_app/Controllers/mainscreen_controller.dart';
@@ -141,22 +142,37 @@ class _MainScreenState extends State<MainScreen>
                 builder: (context, uploaderViewController, child) {
               return Center(
                 child: !uploaderViewController.fileUploaded
-                    ? Container(
-                        child: SizedBox(
-                          height: 85,
-                          child: FittedBox(
-                            child: ElevatedButton.icon(
-                              style: const ButtonStyle(
-                                  backgroundColor: MaterialStatePropertyAll(
-                                      Color(0xFF3E3E3E))),
-                              onPressed: () {
-                                uploaderViewController.uploadFile();
-                              },
-                              label: const Text("Upload file"),
-                              icon: const Icon(Icons.upload),
+                    ? Flex(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        direction: Axis.vertical,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 15),
+                            child: SizedBox(
+                              height: 85,
+                              child: FittedBox(
+                                child: ElevatedButton.icon(
+                                  style: ButtonStyle(
+                                      backgroundColor: MaterialStatePropertyAll(
+                                          Color.fromARGB(255, 90, 172, 93)),
+                                      shadowColor: MaterialStatePropertyAll(
+                                          Color.fromARGB(255, 43, 90, 53)),
+                                      elevation: MaterialStatePropertyAll(5)),
+                                  onPressed: () {
+                                    uploaderViewController.uploadFile();
+                                  },
+                                  label: const Text("Upload file"),
+                                  icon: const Icon(Icons.upload),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          Text(
+                            "Upload a PDF file to begin processing and generate your quiz!",
+                            style: TextStyle(fontSize: 20, color: Colors.white),
+                            textAlign: TextAlign.center,
+                          )
+                        ],
                       )
                     : Container(
                         child: Column(
