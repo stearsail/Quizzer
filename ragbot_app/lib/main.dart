@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:ragbot_app/Controllers/mainscreen_controller.dart';
 import 'package:ragbot_app/Controllers/upload_controller.dart';
 import 'package:ragbot_app/Themes/dark_theme.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:lottie/lottie.dart';
 
 // ignore_for_file: prefer_const_constructors
 void main() {
@@ -63,9 +64,7 @@ class _MainScreenState extends State<MainScreen>
 
   @override
   Widget build(BuildContext context) {
-    final panelHeightOpen = MediaQuery.of(context).size.height * 0.4;
-    final uploaderViewController =
-        Provider.of<UploaderViewController>(context, listen: false);
+    final panelHeightOpen = MediaQuery.of(context).size.height * 0.45;
     return Scaffold(
       backgroundColor: const Color(0xFF3E3E3E),
       appBar: AppBar(title: const Text('Main screen')),
@@ -73,62 +72,83 @@ class _MainScreenState extends State<MainScreen>
         children: [
           Consumer<MainScreenController>(
             builder: (context, mainScreenController, child) {
-              if (mainScreenController.tests.isEmpty) {
-                return const Center(
-                    child: Text(
-                        'Looks like you have no previous tests\nUpload a PDF to get started!'));
+              if (mainScreenController.quizzes.isEmpty) {
+                return Center(
+                  child: Flex(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    direction: Axis.vertical,
+                    children: [
+                      SvgPicture.asset(
+                        "assets/happy_cat.svg",
+                        height: 300,
+                        colorFilter:
+                            ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+                      ),
+                      Text(
+                        'Looks like you have no previous quizzes\nUpload a PDF to get started!',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 20,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                );
               }
               return SlidableAutoCloseBehavior(
-                  closeWhenOpened: true,
-                  child: AnimatedList(
-                    key: mainScreenController.listKey,
-                    initialItemCount: mainScreenController.tests.length,
-                    itemBuilder: (context, index, animation) {
-                      final test = mainScreenController.tests[index];
-                      return SlideTransition(
-                          position: CurvedAnimation(
-                            curve: Curves.easeOut,
-                            parent: animation,
-                          ).drive(((Tween<Offset>(
-                            begin: Offset(1, 0),
-                            end: Offset(0, 0),
-                          )))),
-                          child: Slidable(
-                            endActionPane: ActionPane(
-                              motion: const StretchMotion(),
-                              dragDismissible: true,
-                              children: const [
-                                SlidableAction(
-                                  onPressed: null,
-                                  icon: Icons.visibility,
-                                  label: 'View',
-                                  backgroundColor: Color(0xFF6738FF),
-                                ),
-                                SlidableAction(
-                                  onPressed: null,
-                                  icon: Icons.delete_forever_sharp,
-                                  label: 'Delete',
-                                  backgroundColor:
-                                      Color.fromARGB(255, 255, 54, 54),
-                                ),
-                              ],
+                closeWhenOpened: true,
+                child: AnimatedList(
+                  key: mainScreenController.listKey,
+                  initialItemCount: mainScreenController.quizzes.length,
+                  itemBuilder: (context, index, animation) {
+                    final quiz = mainScreenController.quizzes[index];
+                    return SlideTransition(
+                      position: CurvedAnimation(
+                        curve: Curves.easeOut,
+                        parent: animation,
+                      ).drive(((Tween<Offset>(
+                        begin: Offset(1, 0),
+                        end: Offset(0, 0),
+                      )))),
+                      child: Slidable(
+                        endActionPane: ActionPane(
+                          motion: const StretchMotion(),
+                          dragDismissible: true,
+                          children: [
+                            SlidableAction(
+                              onPressed: null,
+                              icon: Icons.visibility,
+                              label: 'View',
+                              backgroundColor: Color(0xFF6738FF),
                             ),
-                            child: ListTile(
-                              title: Text(test,
-                                  style: const TextStyle(
-                                      fontSize: 20, color: Color(0xFFF3F6F4))),
-                              subtitle: Text(
-                                'Score: 70%',
-                                style:
-                                    const TextStyle(color: Color(0xFFF3F6F4)),
-                              ),
+                            SlidableAction(
+                              onPressed: (_) => _confirmDeleteQuiz(
+                                  context, quiz.title, quiz.quizId!, index),
+                              icon: Icons.delete_forever_sharp,
+                              label: 'Delete',
+                              backgroundColor: Color.fromARGB(255, 255, 54, 54),
                             ),
-                          ));
-                    },
-                  ));
+                          ],
+                        ),
+                        child: ListTile(
+                          title: Text(quiz.title,
+                              style: const TextStyle(
+                                  fontSize: 20, color: Color(0xFFF3F6F4))),
+                          subtitle: Text(
+                            'Score: 70%',
+                            style: const TextStyle(color: Color(0xFFF3F6F4)),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
             },
           ),
           SlidingUpPanel(
+            backdropTapClosesPanel: false,
             borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
             isDraggable: false,
             parallaxEnabled: true,
@@ -138,62 +158,147 @@ class _MainScreenState extends State<MainScreen>
             minHeight: 0,
             color: Color(0xFF6738FF),
             maxHeight: panelHeightOpen,
+            onPanelClosed: () {
+              FocusScope.of(context).unfocus();
+            },
             panel: Consumer<UploaderViewController>(
                 builder: (context, uploaderViewController, child) {
-              return Center(
-                child: !uploaderViewController.fileUploaded
-                    ? Flex(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        direction: Axis.vertical,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 15),
-                            child: SizedBox(
-                              height: 85,
-                              child: FittedBox(
-                                child: ElevatedButton.icon(
-                                  style: ButtonStyle(
-                                      backgroundColor: MaterialStatePropertyAll(
-                                          Color.fromARGB(255, 90, 172, 93)),
-                                      shadowColor: MaterialStatePropertyAll(
-                                          Color.fromARGB(255, 43, 90, 53)),
-                                      elevation: MaterialStatePropertyAll(5)),
-                                  onPressed: () {
-                                    uploaderViewController.uploadFile();
-                                  },
-                                  label: const Text("Upload file"),
-                                  icon: const Icon(Icons.upload),
+              if (!uploaderViewController.isProcessing) {
+                return Center(
+                  child: !uploaderViewController.fileUploaded
+                      ? Flex(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          direction: Axis.vertical,
+                          children: [
+                            SizedBox(
+                              width: 350,
+                              height: 100,
+                              child: TextField(
+                                cursorColor: Color(0xFF6738FF),
+                                controller:
+                                    uploaderViewController.titleInputController,
+                                textCapitalization: TextCapitalization.words,
+                                decoration: InputDecoration(
+                                    errorText:
+                                        uploaderViewController.textErrorMessage,
+                                    errorStyle: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            Color.fromARGB(255, 255, 238, 90)),
+                                    errorBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color:
+                                            Color.fromARGB(255, 250, 194, 72),
+                                        width: 2.5,
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                          color:
+                                              Color.fromARGB(255, 250, 194, 72),
+                                          width: 2.5),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    hintText: "A title for your new test",
+                                    prefixIcon: Icon(Icons.short_text),
+                                    filled: true,
+                                    fillColor: Color(0xFFF3F6F4),
+                                    border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(20))),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 30),
+                              child: SizedBox(
+                                height: 85,
+                                child: FittedBox(
+                                  child: ElevatedButton.icon(
+                                    style: ButtonStyle(
+                                        backgroundColor: MaterialStateProperty
+                                            .resolveWith<Color?>(
+                                                (Set<MaterialState> states) {
+                                          if (states.contains(
+                                              MaterialState.disabled)) {
+                                            return Colors.grey;
+                                          }
+                                          return Color(0xFF5DC461);
+                                        }),
+                                        shadowColor: MaterialStatePropertyAll(
+                                            Color.fromARGB(255, 43, 90, 53)),
+                                        elevation: MaterialStatePropertyAll(5)),
+                                    onPressed: uploaderViewController
+                                                .isButtonEnabled ==
+                                            true
+                                        ? () =>
+                                            uploaderViewController.uploadFile()
+                                        : null,
+                                    label: const Text("Upload file"),
+                                    icon: const Icon(Icons.upload),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          Text(
-                            "Upload a PDF file to begin processing and generate your quiz!",
-                            style: TextStyle(fontSize: 20, color: Colors.white),
-                            textAlign: TextAlign.center,
-                          )
-                        ],
-                      )
-                    : Container(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.file_copy,
-                              size: 120,
-                              color: Colors.white,
-                            ),
-                            Text(
-                              uploaderViewController.uploadedFilePath!,
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold),
+                            Padding(
+                              padding: EdgeInsets.only(bottom: 30),
+                              child: Text(
+                                "Set a title and upload a PDF file to begin processing and generate your quiz!",
+                                style: TextStyle(
+                                    fontSize: 20, color: Colors.white),
+                                textAlign: TextAlign.center,
+                              ),
                             ),
                           ],
+                        )
+                      : Container(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.file_copy,
+                                size: 120,
+                                color: Colors.white,
+                              ),
+                              Text(
+                                uploaderViewController.uploadedFilePath!,
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
                         ),
+                );
+              } else {
+                return Center(
+                    child: Flex(
+                  direction: Axis.vertical,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 20),
+                      child: SizedBox(
+                          height: 200,
+                          width: 200,
+                          child: Lottie.asset("assets/processing_file.json")),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(left: 30, right: 30),
+                      child: Text(
+                        "The PDF is being processed, this may take a while depending on how large the file is...",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
                       ),
-              );
+                    )
+                  ],
+                ));
+              }
             }),
           )
         ],
@@ -236,4 +341,29 @@ class _MainScreenState extends State<MainScreen>
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
+}
+
+void _confirmDeleteQuiz(
+    BuildContext context, String title, int quizId, int index) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text("Confirm deletion"),
+      content: Text("Are you sure you want to delete the quiz: $title ?"),
+      actions: [
+        TextButton(
+          child: Text('Cancel'),
+          onPressed: () => Navigator.of(ctx).pop(),
+        ),
+        TextButton(
+          child: Text('Delete'),
+          onPressed: () {
+            Provider.of<MainScreenController>(context, listen: false)
+                .deleteQuiz(quizId, index);
+            Navigator.of(ctx).pop();
+          },
+        )
+      ],
+    ),
+  );
 }

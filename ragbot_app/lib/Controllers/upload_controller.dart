@@ -2,8 +2,35 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:ragbot_app/Controllers/stream_controller.dart';
+import 'package:ragbot_app/Models/quiz.dart';
+import 'package:ragbot_app/Services/database_service.dart';
 
 class UploaderViewController extends ChangeNotifier {
+  final DatabaseService dbService = DatabaseService();
+  final TextEditingController titleInputController = TextEditingController();
+
+  bool _isButtonEnabled = false;
+  bool get isButtonEnabled => _isButtonEnabled;
+  set isButtonEnabled(bool isButtonEnabled) {
+    _isButtonEnabled = isButtonEnabled;
+    notifyListeners();
+  }
+
+  String? _textErrorMessage;
+  String? get textErrorMessage => _textErrorMessage;
+  set textErrorMessage(String? textErrorMessage) {
+    _textErrorMessage = textErrorMessage;
+    notifyListeners();
+  }
+
+  bool _isProcessing = false;
+  bool get isProcessing => _isProcessing;
+  set isProcessing(bool isProcessing) {
+    _isProcessing = isProcessing;
+    notifyListeners();
+  }
+
   bool _fileUploaded = false;
   bool get fileUploaded => _fileUploaded;
   set fileUploaded(bool fileUploaded) {
@@ -13,6 +40,22 @@ class UploaderViewController extends ChangeNotifier {
 
   String? uploadedFilePath = '';
   final String _uri = "http://10.0.2.2:8000";
+
+  UploaderViewController() {
+    titleInputController.addListener(validateTitleInput);
+  }
+
+  void validateTitleInput() {
+    String input = titleInputController.text;
+    if (input.isEmpty || input.length < 3) {
+      textErrorMessage = "Title must be at least 3 characters long";
+      isButtonEnabled = false;
+    } else {
+      textErrorMessage = null;
+      isButtonEnabled = true;
+    }
+    notifyListeners();
+  }
 
   void uploadFile() async {
     //select file to upload
@@ -29,6 +72,8 @@ class UploaderViewController extends ChangeNotifier {
   }
 
   Future<void> _uploadFileToServer() async {
+    isProcessing = true;
+
     //upload file to fastapi endpoint
     //define uri and multipart request
     Uri uploadUri = Uri.parse('$_uri/upload-pdf');
@@ -45,12 +90,57 @@ class UploaderViewController extends ChangeNotifier {
       fileUploaded = true;
       var response = await Response.fromStream(streamedResponse);
       String responseBody = response.body;
-      var questions = json.decode(responseBody);
-      print(questions);
+      var quiz = json.decode(responseBody);
+      var quizTitle = _capitalizeWords(titleInputController.text.trim());
+      await storeQuiz(quiz, quizTitle);
     } else {
       //temporar
       fileUploaded = true;
       uploadedFilePath = "error";
     }
+    isProcessing = false;
+  }
+
+  Future<void> storeQuiz(String decodedJson, String quizTitle) async {
+    Quiz newQuiz = Quiz(title: quizTitle);
+    int quizId = await dbService.insertQuiz(newQuiz);
+    newQuiz.quizId = quizId;
+    GlobalStreams.addQuiz(
+        newQuiz); // use Global streamController to send new quiz for AnimatedList update in mainScreenController
+    print("Inserted new quiz with ID: $quizId");
+    await storeGeneratedQuestions(decodedJson, quizId);
+  }
+
+  Future<void> storeGeneratedQuestions(String jsonData, int quizId) async {
+    var questionData = json.decode(jsonData)
+        as List<dynamic>; // json list is decoded into dart list of json objects
+
+    for (var questionJson in questionData) {
+      if (!questionJson.isEmpty) {
+        // deals with case when API response contains an empty json (where questions couldn't be generated)
+        Question newQuestion = Question.fromJson(questionJson, quizId);
+        var questionId = await dbService.insertQuestion(newQuestion);
+        print("New question inserted, ID: $questionId part of Quiz: $quizId");
+      }
+    }
+  }
+
+  String _capitalizeWords(String text) {
+    List<String> words = text.split(' ');
+    String capitalizedText = words.map((word) {
+      if (word.isNotEmpty) {
+        return word[0].toUpperCase() + word.substring(1).toLowerCase();
+      }
+      return word;
+    }).join(' ');
+
+    return capitalizedText;
+  }
+
+  @override
+  void dispose() {
+    titleInputController.removeListener(validateTitleInput);
+    titleInputController.dispose();
+    super.dispose();
   }
 }
