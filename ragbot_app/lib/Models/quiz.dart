@@ -63,7 +63,9 @@ class Question {
       questionId: map['questionId'] as int,
       quizId: map['quizId'] as int,
       questionText: map['questionText'] as String,
-      choices: json.decode(map['choices'] as String),
+      choices: (json.decode(map['choices'] as String) as List<dynamic>)
+          .map((e) => Map<String, String>.from(e as Map))
+          .toList(),
       correctChoice: map['correctChoice'] as String,
       selectedChoice: map['selectedChoice'] as String?,
     );

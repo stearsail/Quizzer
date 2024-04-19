@@ -38,6 +38,18 @@ class UploaderViewController extends ChangeNotifier {
     notifyListeners();
   }
 
+  late String _quizTitle;
+  String get quizTitle => _quizTitle;
+  set quizTitle(String quizTitle) {
+    _quizTitle = quizTitle;
+  }
+
+  late List<Question> _currentQuiz;
+  List<Question> get currentQuiz => _currentQuiz;
+  set currentQuiz(List<Question> currentQuiz) {
+    _currentQuiz = currentQuiz;
+  }
+
   String? uploadedFilePath = '';
   final String _uri = "http://10.0.2.2:8000";
 
@@ -49,6 +61,9 @@ class UploaderViewController extends ChangeNotifier {
     String input = titleInputController.text;
     if (input.isEmpty || input.length < 3) {
       textErrorMessage = "Title must be at least 3 characters long";
+      isButtonEnabled = false;
+    } else if (input.length > 35) {
+      textErrorMessage = "Title cannot have more than 35 characters";
       isButtonEnabled = false;
     } else {
       textErrorMessage = null;
@@ -91,7 +106,7 @@ class UploaderViewController extends ChangeNotifier {
       var response = await Response.fromStream(streamedResponse);
       String responseBody = response.body;
       var quiz = json.decode(responseBody);
-      var quizTitle = _capitalizeWords(titleInputController.text.trim());
+      quizTitle = _capitalizeWords(titleInputController.text.trim());
       await storeQuiz(quiz, quizTitle);
     } else {
       //temporar
@@ -109,6 +124,7 @@ class UploaderViewController extends ChangeNotifier {
         newQuiz); // use Global streamController to send new quiz for AnimatedList update in mainScreenController
     print("Inserted new quiz with ID: $quizId");
     await storeGeneratedQuestions(decodedJson, quizId);
+    currentQuiz = await dbService.getQuestionsForQuiz(quizId);
   }
 
   Future<void> storeGeneratedQuestions(String jsonData, int quizId) async {
@@ -135,6 +151,26 @@ class UploaderViewController extends ChangeNotifier {
     }).join(' ');
 
     return capitalizedText;
+  }
+
+  void resetController() {
+    // Reset file-related flags
+    fileUploaded = false;
+    isProcessing = false;
+    uploadedFilePath = null;
+
+    // Reset UI-related fields
+    _isButtonEnabled = false;
+    _textErrorMessage = null;
+
+    // Reset the quiz and questions
+    _quizTitle = '';
+    _currentQuiz = [];
+
+    // Clear the text field's content
+    titleInputController.clear();
+
+    notifyListeners();
   }
 
   @override

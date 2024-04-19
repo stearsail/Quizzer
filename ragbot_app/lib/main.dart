@@ -252,25 +252,121 @@ class _MainScreenState extends State<MainScreen>
                             ),
                           ],
                         )
-                      : Container(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.file_copy,
-                                size: 120,
-                                color: Colors.white,
-                              ),
-                              Text(
-                                uploaderViewController.uploadedFilePath!,
-                                style: TextStyle(
+                      : Flex(
+                          direction: Axis.vertical,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.check_circle,
+                                    size: 120,
                                     color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.only(
+                                        top: 20, left: 30, right: 30),
+                                    child: RichText(
+                                      text: TextSpan(children: <TextSpan>[
+                                        TextSpan(
+                                          text: "Your quiz:\n",
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text:
+                                              "${uploaderViewController.quizTitle}\n",
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            color: Color.fromARGB(
+                                                255, 250, 194, 72),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text:
+                                              "has been succesfully created!\nWould you like to take it now or later?",
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ]),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
+                              Padding(
+                                padding: EdgeInsets.only(top: 30),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 10),
+                                      child: SizedBox(
+                                        height: 70,
+                                        child: FittedBox(
+                                            child: TextButton(
+                                          style: ButtonStyle(
+                                            backgroundColor:
+                                                MaterialStateProperty.all<
+                                                    Color>(Color(0xFF5DC461)),
+                                            shape: MaterialStateProperty.all<
+                                                RoundedRectangleBorder>(
+                                              RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                          ),
+                                          onPressed: null,
+                                          child: const Text(
+                                            "Take now",
+                                            style: TextStyle(
+                                                color: Color(0xFFF3F6F4)),
+                                          ),
+                                        )),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 10),
+                                      child: SizedBox(
+                                        height: 70,
+                                        child: FittedBox(
+                                            child: TextButton(
+                                          style: ButtonStyle(
+                                            backgroundColor:
+                                                MaterialStateProperty.all<
+                                                    Color>(
+                                              Color.fromARGB(255, 224, 83, 73),
+                                            ),
+                                            shape: MaterialStateProperty.all<
+                                                RoundedRectangleBorder>(
+                                              RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                          ),
+                                          onPressed: () =>
+                                              uploaderViewController
+                                                  .resetController(),
+                                          child: const Text(
+                                            "Take later",
+                                            style: TextStyle(
+                                                color: Color(0xFFF3F6F4)),
+                                          ),
+                                        )),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ]),
                 );
               } else {
                 return Center(
@@ -348,15 +444,31 @@ void _confirmDeleteQuiz(
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text("Confirm deletion"),
-      content: Text("Are you sure you want to delete the quiz: $title ?"),
+      content: Padding(
+          padding: EdgeInsets.only(top: 20),
+          child: Text(
+            "Are you sure you want to delete the quiz:\n$title?",
+            style: TextStyle(fontSize: 18, height: 1.5),
+          )),
       actions: [
         TextButton(
-          child: Text('Cancel'),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              color: Color(0xFF6738FF),
+              fontSize: 18,
+            ),
+          ),
           onPressed: () => Navigator.of(ctx).pop(),
         ),
         TextButton(
-          child: Text('Delete'),
+          child: Text(
+            'Delete',
+            style: TextStyle(
+              color: Color.fromARGB(255, 224, 83, 73),
+              fontSize: 18,
+            ),
+          ),
           onPressed: () {
             Provider.of<MainScreenController>(context, listen: false)
                 .deleteQuiz(quizId, index);
