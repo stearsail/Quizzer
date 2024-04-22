@@ -6,7 +6,15 @@ class GlobalStreams {
       StreamController.broadcast();
   static Stream<Quiz> get quizStream => _quizStreamController.stream;
 
+  static final StreamController<Quiz> _deletedQuizStreamController =
+      StreamController.broadcast();
+    static Stream<Quiz> get deletedQuizStream => _deletedQuizStreamController.stream;
+
   static void addQuiz(Quiz quiz) {
     _quizStreamController.sink.add(quiz);
+  }
+
+  static void deleteQuiz(Quiz quiz){
+    _deletedQuizStreamController.sink.add(quiz);
   }
 }

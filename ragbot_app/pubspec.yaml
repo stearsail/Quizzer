@@ -47,6 +47,8 @@ dependencies:
   path: ^1.9.0
   lottie: ^3.1.0
   flutter_svg: ^2.0.10+1
+  internet_connection_checker_plus: ^2.3.0
+  flutter_native_splash: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -100,3 +102,14 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+flutter_native_splash:
+  color: "#f5f5f5"
+  image: "assets/test.png"
+  color_dark: "#0F141A"
+  image_dark: "assets/test.png"
+  android_12:
+    color: "#f5f5f5"
+    image: "assets/test.png"
+    color_dark: "#0F141A"
+    image_dark: "assets/test.png"

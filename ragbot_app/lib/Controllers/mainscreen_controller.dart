@@ -5,8 +5,10 @@ import 'package:ragbot_app/Services/database_service.dart';
 
 class MainScreenController extends ChangeNotifier {
   final DatabaseService dbService = DatabaseService();
-
   final List<Quiz> _quizzes = [];
+  bool slideUpVisible = false; //variables that involve animations
+  double turns = 0.0;
+  final panelAnimationDuration = const Duration(milliseconds: 300);
 
   List<Quiz> get quizzes => _quizzes;
 
@@ -16,6 +18,11 @@ class MainScreenController extends ChangeNotifier {
     GlobalStreams.quizStream.listen((quiz) {
       addQuiz(quiz);
     });
+  }
+
+  @override
+  void dispose(){
+    super.dispose();
   }
 
   void loadList() async {
@@ -38,6 +45,8 @@ class MainScreenController extends ChangeNotifier {
 
   void deleteQuiz(int quizId, int index) async {
     await dbService.deleteQuiz(quizId);
+    GlobalStreams.deleteQuiz(
+    _quizzes.elementAt(index)); //pass to global stream to remove from quizTitles in upload controller
     _quizzes.removeAt(index);
     listKey.currentState?.removeItem(
         index,
@@ -54,7 +63,7 @@ class MainScreenController extends ChangeNotifier {
       child: Container(
         height: 50, // Or whatever height your list items have
         decoration: BoxDecoration(
-          color: Color.fromARGB(255, 255, 54, 54).withOpacity(
+          color: const Color.fromARGB(255, 255, 54, 54).withOpacity(
               0.1), // Visual feedback that something is being removed
         ),
       ),

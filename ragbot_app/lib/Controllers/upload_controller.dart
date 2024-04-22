@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:ragbot_app/Controllers/stream_controller.dart';
 import 'package:ragbot_app/Models/quiz.dart';
+import 'package:ragbot_app/Services/connectivity_service.dart';
 import 'package:ragbot_app/Services/database_service.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -54,18 +55,31 @@ class UploaderViewController extends ChangeNotifier {
 
   String? uploadedFilePath = '';
   final String _uri = "http://10.0.2.2:8000";
+  List<String>? quizTitles;
 
   UploaderViewController() {
     titleInputController.addListener(validateTitleInput);
+    GlobalStreams.deletedQuizStream.listen((quiz) {
+      quizTitles!.remove(quiz.title.toLowerCase());
+    });
   }
 
-  void validateTitleInput() {
+  Future<void> initQuizTitles() async {
+    var quizzes = await dbService.getAllQuizzes();
+    quizTitles = quizzes.map((quiz) => quiz.title.toLowerCase()).toList();
+  }
+
+  void validateTitleInput() async {
+    if (quizTitles == null || quizTitles!.isEmpty) await initQuizTitles();
     String input = titleInputController.text;
     if (input.isEmpty || input.length < 3) {
       textErrorMessage = "Title must be at least 3 characters long";
       isButtonEnabled = false;
     } else if (input.length > 35) {
       textErrorMessage = "Title cannot have more than 35 characters";
+      isButtonEnabled = false;
+    } else if (quizTitles!.contains(input.toLowerCase())) {
+      textErrorMessage = "The same title already exists";
       isButtonEnabled = false;
     } else {
       textErrorMessage = null;
@@ -109,6 +123,7 @@ class UploaderViewController extends ChangeNotifier {
       String responseBody = response.body;
       var quiz = json.decode(responseBody);
       quizTitle = _capitalizeWords(titleInputController.text.trim());
+      quizTitles!.add(quizTitle.toLowerCase());
       await storeQuiz(quiz, quizTitle);
     } else {
       //temporar
