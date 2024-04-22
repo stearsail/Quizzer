@@ -43,8 +43,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen>
     with SingleTickerProviderStateMixin {
-  late PanelController panelController = PanelController();
-
   bool slideUpVisible = false; //variables that involve animations
   double turns = 0.0;
   final panelAnimationDuration = const Duration(milliseconds: 300);
@@ -64,6 +62,8 @@ class _MainScreenState extends State<MainScreen>
 
   @override
   Widget build(BuildContext context) {
+    final uploaderViewController =
+        Provider.of<UploaderViewController>(context, listen: false);
     final panelHeightOpen = MediaQuery.of(context).size.height * 0.45;
     return Scaffold(
       backgroundColor: const Color(0xFF3E3E3E),
@@ -152,7 +152,7 @@ class _MainScreenState extends State<MainScreen>
             borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
             isDraggable: false,
             parallaxEnabled: true,
-            controller: panelController,
+            controller: uploaderViewController.panelController,
             backdropEnabled: true,
             defaultPanelState: PanelState.CLOSED,
             minHeight: 0,
@@ -337,30 +337,42 @@ class _MainScreenState extends State<MainScreen>
                                       child: SizedBox(
                                         height: 70,
                                         child: FittedBox(
-                                            child: TextButton(
-                                          style: ButtonStyle(
-                                            backgroundColor:
-                                                MaterialStateProperty.all<
-                                                    Color>(
-                                              Color.fromARGB(255, 224, 83, 73),
-                                            ),
-                                            shape: MaterialStateProperty.all<
-                                                RoundedRectangleBorder>(
-                                              RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
+                                          child: TextButton(
+                                            style: ButtonStyle(
+                                              backgroundColor:
+                                                  MaterialStateProperty.all<
+                                                      Color>(
+                                                Color.fromARGB(
+                                                    255, 224, 83, 73),
+                                              ),
+                                              shape: MaterialStateProperty.all<
+                                                  RoundedRectangleBorder>(
+                                                RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
                                               ),
                                             ),
+                                            onPressed: () {
+                                              setState(() {
+                                                turns += 0.5;
+                                                slideUpVisible =
+                                                    !slideUpVisible;
+
+                                                uploaderViewController
+                                                    .panelController
+                                                    .close();
+                                                uploaderViewController
+                                                    .resetController();
+                                              });
+                                            },
+                                            child: const Text(
+                                              "Take later",
+                                              style: TextStyle(
+                                                  color: Color(0xFFF3F6F4)),
+                                            ),
                                           ),
-                                          onPressed: () =>
-                                              uploaderViewController
-                                                  .resetController(),
-                                          child: const Text(
-                                            "Take later",
-                                            style: TextStyle(
-                                                color: Color(0xFFF3F6F4)),
-                                          ),
-                                        )),
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -414,8 +426,8 @@ class _MainScreenState extends State<MainScreen>
               onPressed: () {
                 setState(() {
                   !slideUpVisible
-                      ? panelController.open()
-                      : panelController.close();
+                      ? uploaderViewController.panelController.open()
+                      : uploaderViewController.panelController.close();
                   slideUpVisible = !slideUpVisible;
                   turns += 1 / 2;
                 });

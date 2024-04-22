@@ -5,9 +5,11 @@ import 'package:http/http.dart';
 import 'package:ragbot_app/Controllers/stream_controller.dart';
 import 'package:ragbot_app/Models/quiz.dart';
 import 'package:ragbot_app/Services/database_service.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class UploaderViewController extends ChangeNotifier {
   final DatabaseService dbService = DatabaseService();
+  late PanelController panelController = PanelController();
   final TextEditingController titleInputController = TextEditingController();
 
   bool _isButtonEnabled = false;
