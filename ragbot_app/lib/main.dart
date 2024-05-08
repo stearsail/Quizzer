@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:ragbot_app/Controllers/mainscreen_controller.dart';
 import 'package:ragbot_app/Controllers/upload_controller.dart';
+import 'package:ragbot_app/Models/quiz.dart';
+import 'package:ragbot_app/Services/connectivity_service.dart';
 import 'package:ragbot_app/Themes/dark_theme.dart';
 import 'package:ragbot_app/Views/file_uploaded_widget.dart';
+import 'package:ragbot_app/Views/no_internet_screen.dart';
 import 'package:ragbot_app/Views/no_quizzes_widget.dart';
 import 'package:ragbot_app/Views/processing_widget.dart';
+import 'package:ragbot_app/Views/quiz_solver_screen.dart';
 import 'package:ragbot_app/Views/quizzes_widget.dart';
 import 'package:ragbot_app/Views/upload_file_widget.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -82,40 +87,58 @@ class _MainScreenState extends State<MainScreen>
                 return NoQuizzesWidget();
               } else {
                 return QuizzesWidget(
-                    mainScreenController: mainScreenController);
+                  mainScreenController: mainScreenController,
+                  navigateToQuizSolver: navigateToQuizSolver,
+                );
               }
             },
           ),
           SlidingUpPanel(
-            backdropTapClosesPanel: false,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-            isDraggable: false,
-            parallaxEnabled: true,
-            controller: uploaderViewController.panelController,
-            backdropEnabled: true,
-            defaultPanelState: PanelState.CLOSED,
-            minHeight: 0,
-            color: Color(0xFF6738FF),
-            maxHeight: panelHeightOpen,
-            onPanelClosed: () {
-              FocusScope.of(context).unfocus();
-            },
-            panel: Consumer2<UploaderViewController, MainScreenController>(
-                builder: (context, uploaderViewController, mainScreenController,
-                    child) {
-              if (!uploaderViewController.isProcessing) {
-                return Center(
-                    child: !uploaderViewController.fileUploaded
-                        ? UploadFileWidget(
-                            uploaderViewController: uploaderViewController)
-                        : FileUploadedWidget(
-                            uploaderViewController: uploaderViewController,
-                            mainScreenController: mainScreenController));
-              } else {
-                return ProcessingWidget();
-              }
-            }),
-          )
+              backdropTapClosesPanel: false,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+              isDraggable: false,
+              parallaxEnabled: true,
+              controller: uploaderViewController.panelController,
+              backdropEnabled: true,
+              defaultPanelState: PanelState.CLOSED,
+              minHeight: 0,
+              color: Color(0xFF6738FF),
+              maxHeight: panelHeightOpen,
+              onPanelClosed: () {
+                FocusScope.of(context).unfocus();
+              },
+              panel: StreamBuilder<InternetStatus>(
+                  stream: ConnectivityService().connectionChange,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.active) {
+                      if (snapshot.data == InternetStatus.connected) {
+                        return Consumer2<UploaderViewController,
+                                MainScreenController>(
+                            builder: (context, uploaderViewController,
+                                mainScreenController, child) {
+                          if (!uploaderViewController.isProcessing) {
+                            return Center(
+                                child: !uploaderViewController.fileUploaded
+                                    ? UploadFileWidget(
+                                        uploaderViewController:
+                                            uploaderViewController)
+                                    : FileUploadedWidget(
+                                        uploaderViewController:
+                                            uploaderViewController,
+                                        mainScreenController:
+                                            mainScreenController));
+                          } else {
+                            return ProcessingWidget();
+                          }
+                        });
+                      } else {
+                        return NoInternetScreen();
+                      }
+                    }
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }))
         ],
       ),
       bottomNavigationBar: BottomAppBar(
@@ -157,6 +180,23 @@ class _MainScreenState extends State<MainScreen>
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+
+  void navigateToQuizSolver(BuildContext context, Quiz quiz) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+          pageBuilder: (context, aniamtion, secondaryAnimataion) =>
+              QuizSolverScreen(quiz: quiz),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(0.0, 0.1);
+            const end = Offset.zero;
+            const curve = Curves.bounceIn;
+            final tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            final offsetAnimation = animation.drive(tween);
+            return SlideTransition(position: offsetAnimation, child: child);
+          }),
     );
   }
 }

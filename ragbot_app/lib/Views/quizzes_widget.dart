@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:ragbot_app/Controllers/mainscreen_controller.dart';
+import 'package:ragbot_app/Models/quiz.dart';
 
 class QuizzesWidget extends StatefulWidget {
   final MainScreenController mainScreenController;
+  final Function(BuildContext, Quiz) navigateToQuizSolver;
 
-  const QuizzesWidget({super.key, required this.mainScreenController});
-  
+  const QuizzesWidget(
+      {super.key,
+      required this.mainScreenController,
+      required this.navigateToQuizSolver});
+
   @override
   State<StatefulWidget> createState() => _QuizzesWidgetState();
 }
@@ -15,8 +20,7 @@ class QuizzesWidget extends StatefulWidget {
 class _QuizzesWidgetState extends State<QuizzesWidget> {
   @override
   Widget build(BuildContext context) {
-    
-      return SlidableAutoCloseBehavior(
+    return SlidableAutoCloseBehavior(
       closeWhenOpened: true,
       child: AnimatedList(
         key: widget.mainScreenController.listKey,
@@ -33,9 +37,17 @@ class _QuizzesWidgetState extends State<QuizzesWidget> {
             )))),
             child: Slidable(
               endActionPane: ActionPane(
+                extentRatio: 0.6,
                 motion: const StretchMotion(),
                 dragDismissible: true,
                 children: [
+                  SlidableAction(
+                    onPressed: (context) =>
+                        widget.navigateToQuizSolver(context, quiz),
+                    icon: Icons.edit_square,
+                    label: 'Solve',
+                    backgroundColor: Colors.blue,
+                  ),
                   const SlidableAction(
                     onPressed: null,
                     icon: Icons.visibility,
