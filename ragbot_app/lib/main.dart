@@ -75,7 +75,6 @@ class _MainScreenState extends State<MainScreen>
     final uploaderViewController =
         Provider.of<UploaderViewController>(context, listen: false);
     final panelHeightOpen = MediaQuery.of(context).size.height * 0.45;
-    uploaderViewController.getServerStatus();
     return Scaffold(
       backgroundColor: const Color(0xFF3E3E3E),
       appBar: AppBar(title: const Text('Main screen')),
@@ -162,7 +161,8 @@ class _MainScreenState extends State<MainScreen>
           child: FittedBox(
             child: FloatingActionButton(
               onPressed: () {
-                if (!mainScreenController.slideUpVisible) uploaderViewController.getServerStatus();
+                if (!mainScreenController.slideUpVisible)
+                  uploaderViewController.getServerStatus();
                 setState(() {
                   !mainScreenController.slideUpVisible
                       ? uploaderViewController.panelController.open()

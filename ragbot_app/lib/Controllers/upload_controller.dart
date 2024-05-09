@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:ragbot_app/Controllers/stream_controller.dart';
 import 'package:ragbot_app/Models/quiz.dart';
+import 'package:ragbot_app/Models/question.dart';
 import 'package:ragbot_app/Services/database_service.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -36,7 +37,7 @@ class UploaderViewController extends ChangeNotifier {
 
   bool _serverRunning = true;
   bool get serverRunning => _serverRunning;
-  set serverRunning(bool serverRunning){
+  set serverRunning(bool serverRunning) {
     _serverRunning = serverRunning;
     notifyListeners();
   }
@@ -96,6 +97,9 @@ class UploaderViewController extends ChangeNotifier {
   }
 
   void uploadFile() async {
+    //server health and status check
+    await getServerStatus();
+    if (!serverRunning) return;
     //select file to upload
     FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -110,20 +114,20 @@ class UploaderViewController extends ChangeNotifier {
   }
 
   Future<void> getServerStatus() async {
-  Uri statusUri = Uri.parse('$_uri/health-check');
-  try {
-    // Attempt to fetch the health-check endpoint
-    http.Response response = await http.get(statusUri).timeout(const Duration(seconds: 1));
-    serverRunning = response.statusCode == 200;
-  } catch (e) {
-    serverRunning = false;
-  } finally {
+    Uri statusUri = Uri.parse('$_uri/health-check');
+    try {
+      // Attempt to fetch the health-check endpoint
+      http.Response response =
+          await http.get(statusUri).timeout(const Duration(seconds: 1));
+      serverRunning = response.statusCode == 200;
+    } catch (e) {
+      serverRunning = false;
+    } finally {}
   }
-}
 
   Future<void> _uploadFileToServer() async {
     await getServerStatus();
-    if(!serverRunning) return;
+    if (!serverRunning) return;
     isProcessing = true;
 
     //upload file to fastapi endpoint
@@ -132,7 +136,8 @@ class UploaderViewController extends ChangeNotifier {
     http.MultipartRequest request = http.MultipartRequest('POST', uploadUri);
 
     //attach file to request {'filename' : '<the path>'}
-    request.files.add(await http.MultipartFile.fromPath('file', uploadedFilePath!));
+    request.files
+        .add(await http.MultipartFile.fromPath('file', uploadedFilePath!));
 
     //send request
     http.StreamedResponse streamedResponse = await request.send();
@@ -154,7 +159,8 @@ class UploaderViewController extends ChangeNotifier {
     isProcessing = false;
   }
 
-  Future<void> storeQuiz(String decodedJson, String quizTitle, String quizSourceFile) async {
+  Future<void> storeQuiz(
+      String decodedJson, String quizTitle, String quizSourceFile) async {
     Quiz newQuiz = Quiz(title: quizTitle, sourceFile: quizSourceFile);
     int quizId = await dbService.insertQuiz(newQuiz);
     newQuiz.quizId = quizId;

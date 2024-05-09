@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:ragbot_app/Models/quiz.dart';
+import 'package:ragbot_app/Models/question.dart';
 
 class DatabaseService {
   DatabaseService._privateConstructor();

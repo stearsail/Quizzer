@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ragbot_app/Models/quiz.dart';
+import 'package:ragbot_app/Models/question.dart';
 import 'package:ragbot_app/Services/database_service.dart';
 
 class QuizSolverScreen extends StatefulWidget {
