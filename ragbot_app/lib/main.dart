@@ -9,7 +9,6 @@ import 'package:ragbot_app/Services/connectivity_service.dart';
 import 'package:ragbot_app/Themes/dark_theme.dart';
 import 'package:ragbot_app/Views/file_uploaded_widget.dart';
 import 'package:ragbot_app/Views/no_internet_screen.dart';
-import 'package:ragbot_app/Views/no_quizzes_widget.dart';
 import 'package:ragbot_app/Views/processing_widget.dart';
 import 'package:ragbot_app/Views/quiz_solver_screen.dart';
 import 'package:ragbot_app/Views/quizzes_widget.dart';
@@ -56,19 +55,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen>
     with SingleTickerProviderStateMixin {
   @override
-  initState() {
-    super.initState();
-    final mainScreenController = Provider.of<MainScreenController>(context,
-        listen: false); //loading list animation
-    mainScreenController.loadList();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final mainScreenController =
         Provider.of<MainScreenController>(context, listen: false);
@@ -82,14 +68,10 @@ class _MainScreenState extends State<MainScreen>
         children: [
           Consumer<MainScreenController>(
             builder: (context, mainScreenController, child) {
-              if (mainScreenController.quizzes.isEmpty) {
-                return NoQuizzesWidget();
-              } else {
-                return QuizzesWidget(
-                  mainScreenController: mainScreenController,
-                  navigateToQuizSolver: navigateToQuizSolver,
-                );
-              }
+              return QuizzesWidget(
+                mainScreenController: mainScreenController,
+                navigateToQuizSolver: navigateToQuizSolver,
+              );
             },
           ),
           SlidingUpPanel(

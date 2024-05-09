@@ -8,6 +8,7 @@ class MainScreenController extends ChangeNotifier {
   final List<Quiz> _quizzes = [];
   bool slideUpVisible = false; //variables that involve animations
   double turns = 0.0;
+  bool listEmpty = false;
   final panelAnimationDuration = const Duration(milliseconds: 300);
 
   List<Quiz> get quizzes => _quizzes;
@@ -21,15 +22,17 @@ class MainScreenController extends ChangeNotifier {
   }
 
   @override
-  void dispose(){
+  void dispose() {
     super.dispose();
   }
 
-  void loadList() async {
+  Future<void> loadList() async {
     final listToAdd = await dbService.getAllQuizzes();
+    listEmpty = listToAdd.isEmpty;
+    notifyListeners();
 
     for (var i = 0; i < listToAdd.length; i++) {
-      await Future.delayed(const Duration(milliseconds: 100), () {
+      await Future.delayed(const Duration(milliseconds: 500), () {
         _quizzes.add(listToAdd[i]);
         listKey.currentState?.insertItem(i);
         notifyListeners();
@@ -45,8 +48,8 @@ class MainScreenController extends ChangeNotifier {
 
   void deleteQuiz(int quizId, int index) async {
     await dbService.deleteQuiz(quizId);
-    GlobalStreams.deleteQuiz(
-    _quizzes.elementAt(index)); //pass to global stream to remove from quizTitles in upload controller
+    GlobalStreams.deleteQuiz(_quizzes.elementAt(
+        index)); //pass to global stream to remove from quizTitles in upload controller
     _quizzes.removeAt(index);
     listKey.currentState?.removeItem(
         index,

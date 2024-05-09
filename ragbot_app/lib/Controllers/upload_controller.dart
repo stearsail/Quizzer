@@ -55,12 +55,6 @@ class UploaderViewController extends ChangeNotifier {
     _quizTitle = quizTitle;
   }
 
-  late List<Question> _currentQuiz;
-  List<Question> get currentQuiz => _currentQuiz;
-  set currentQuiz(List<Question> currentQuiz) {
-    _currentQuiz = currentQuiz;
-  }
-
   String? uploadedFilePath = '';
   final String _uri = "http://10.0.2.2:8000";
   List<String>? quizTitles;
@@ -164,12 +158,13 @@ class UploaderViewController extends ChangeNotifier {
     Quiz newQuiz = Quiz(title: quizTitle, sourceFile: quizSourceFile);
     int quizId = await dbService.insertQuiz(newQuiz);
     newQuiz.quizId = quizId;
+    print("Inserted new quiz with ID: $quizId");
+    await storeGeneratedQuestions(decodedJson, quizId);
+    newQuiz.progress =
+        await dbService.calculateProgressForQuiz(newQuiz.quizId!);
     GlobalStreams.addQuiz(
         newQuiz); // use Global streamController to send new quiz for AnimatedList update in mainScreenController
     generatedQuiz = newQuiz; //save current quiz
-    print("Inserted new quiz with ID: $quizId");
-    await storeGeneratedQuestions(decodedJson, quizId);
-    currentQuiz = await dbService.getQuestionsForQuiz(quizId);
   }
 
   Future<void> storeGeneratedQuestions(String jsonData, int quizId) async {
@@ -211,7 +206,6 @@ class UploaderViewController extends ChangeNotifier {
 
     // Reset the quiz and questions
     _quizTitle = '';
-    _currentQuiz = [];
     generatedQuiz = null;
 
     // Clear the text field's content

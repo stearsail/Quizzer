@@ -2,7 +2,7 @@ class Quiz {
   int? quizId;
   String title;
   String sourceFile;
-
+  String? progress;
   Quiz({this.quizId, required this.title, required this.sourceFile});
 
   Map<String, dynamic> toMap() {

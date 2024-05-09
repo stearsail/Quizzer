@@ -67,7 +67,13 @@ class DatabaseService {
   Future<List<Quiz>> getAllQuizzes() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query('Quizzes');
-    return List.generate(maps.length, (i) => Quiz.fromMap(maps[i]));
+    List<Quiz> quizzes = [];
+    for (var map in maps) {
+      Quiz newQuiz = Quiz.fromMap(map);
+      newQuiz.progress = await calculateProgressForQuiz(newQuiz.quizId!);
+      quizzes.add(newQuiz);
+    }
+    return quizzes;
   }
 
   Future<void> deleteQuiz(int quizId) async {
@@ -78,6 +84,14 @@ class DatabaseService {
       whereArgs: [quizId],
     );
   }
+
+  Future<String> calculateProgressForQuiz(int quizId) async {
+    List<Question> questions = await getQuestionsForQuiz(quizId);
+    var correctAnswers = questions
+        .where((element) => element.selectedChoice == element.correctChoice);
+    return "${correctAnswers.length}/${questions.length} correct answers - Score: ${((correctAnswers.length / questions.length) * 100).floor()}%";
+  }
+
   // Future<void> updateQuestionChoice(int questionId, String choiceId) async {
   //   final db = await database;
   //   await db.update('Questions', {'selectedChoice': choiceId},
