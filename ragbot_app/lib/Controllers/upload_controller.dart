@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
 import 'package:ragbot_app/Controllers/stream_controller.dart';
 import 'package:ragbot_app/Models/quiz.dart';
 import 'package:ragbot_app/Services/database_service.dart';
@@ -11,6 +11,7 @@ class UploaderViewController extends ChangeNotifier {
   final DatabaseService dbService = DatabaseService();
   late PanelController panelController = PanelController();
   final TextEditingController titleInputController = TextEditingController();
+  late Quiz? generatedQuiz;
 
   bool _isButtonEnabled = false;
   bool get isButtonEnabled => _isButtonEnabled;
@@ -30,6 +31,13 @@ class UploaderViewController extends ChangeNotifier {
   bool get isProcessing => _isProcessing;
   set isProcessing(bool isProcessing) {
     _isProcessing = isProcessing;
+    notifyListeners();
+  }
+
+  bool _serverRunning = true;
+  bool get serverRunning => _serverRunning;
+  set serverRunning(bool serverRunning){
+    _serverRunning = serverRunning;
     notifyListeners();
   }
 
@@ -101,29 +109,43 @@ class UploaderViewController extends ChangeNotifier {
     }
   }
 
+  Future<void> getServerStatus() async {
+  Uri statusUri = Uri.parse('$_uri/health-check');
+  try {
+    // Attempt to fetch the health-check endpoint
+    http.Response response = await http.get(statusUri).timeout(const Duration(seconds: 1));
+    serverRunning = response.statusCode == 200;
+  } catch (e) {
+    serverRunning = false;
+  } finally {
+  }
+}
+
   Future<void> _uploadFileToServer() async {
+    await getServerStatus();
+    if(!serverRunning) return;
     isProcessing = true;
 
     //upload file to fastapi endpoint
     //define uri and multipart request
     Uri uploadUri = Uri.parse('$_uri/upload-pdf');
-    MultipartRequest request = MultipartRequest('POST', uploadUri);
+    http.MultipartRequest request = http.MultipartRequest('POST', uploadUri);
 
     //attach file to request {'filename' : '<the path>'}
-    request.files.add(await MultipartFile.fromPath('file', uploadedFilePath!));
+    request.files.add(await http.MultipartFile.fromPath('file', uploadedFilePath!));
 
     //send request
-    StreamedResponse streamedResponse = await request.send();
+    http.StreamedResponse streamedResponse = await request.send();
 
     if (streamedResponse.statusCode == 200) {
       //is successful
       fileUploaded = true;
-      var response = await Response.fromStream(streamedResponse);
+      var response = await http.Response.fromStream(streamedResponse);
       String responseBody = response.body;
       var quiz = json.decode(responseBody);
       quizTitle = _capitalizeWords(titleInputController.text.trim());
       quizTitles!.add(quizTitle.toLowerCase());
-      await storeQuiz(quiz, quizTitle);
+      await storeQuiz(quiz, quizTitle, uploadedFilePath!.split('/').last);
     } else {
       //temporar
       fileUploaded = true;
@@ -132,12 +154,13 @@ class UploaderViewController extends ChangeNotifier {
     isProcessing = false;
   }
 
-  Future<void> storeQuiz(String decodedJson, String quizTitle) async {
-    Quiz newQuiz = Quiz(title: quizTitle);
+  Future<void> storeQuiz(String decodedJson, String quizTitle, String quizSourceFile) async {
+    Quiz newQuiz = Quiz(title: quizTitle, sourceFile: quizSourceFile);
     int quizId = await dbService.insertQuiz(newQuiz);
     newQuiz.quizId = quizId;
     GlobalStreams.addQuiz(
         newQuiz); // use Global streamController to send new quiz for AnimatedList update in mainScreenController
+    generatedQuiz = newQuiz; //save current quiz
     print("Inserted new quiz with ID: $quizId");
     await storeGeneratedQuestions(decodedJson, quizId);
     currentQuiz = await dbService.getQuestionsForQuiz(quizId);
@@ -173,6 +196,7 @@ class UploaderViewController extends ChangeNotifier {
     // Reset file-related flags
     fileUploaded = false;
     isProcessing = false;
+    serverRunning = true;
     uploadedFilePath = null;
 
     // Reset UI-related fields
@@ -182,6 +206,7 @@ class UploaderViewController extends ChangeNotifier {
     // Reset the quiz and questions
     _quizTitle = '';
     _currentQuiz = [];
+    generatedQuiz = null;
 
     // Clear the text field's content
     titleInputController.clear();

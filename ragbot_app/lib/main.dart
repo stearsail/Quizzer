@@ -17,13 +17,12 @@ import 'package:ragbot_app/Views/upload_file_widget.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 // ignore_for_file: prefer_const_constructors
+
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  await Future.delayed(Duration(seconds: 5));
-  FlutterNativeSplash.remove();
-
   runApp(const MyApp());
+  FlutterNativeSplash.remove();
 }
 
 class MyApp extends StatelessWidget {
@@ -76,6 +75,7 @@ class _MainScreenState extends State<MainScreen>
     final uploaderViewController =
         Provider.of<UploaderViewController>(context, listen: false);
     final panelHeightOpen = MediaQuery.of(context).size.height * 0.45;
+    uploaderViewController.getServerStatus();
     return Scaffold(
       backgroundColor: const Color(0xFF3E3E3E),
       appBar: AppBar(title: const Text('Main screen')),
@@ -118,21 +118,27 @@ class _MainScreenState extends State<MainScreen>
                                 mainScreenController, child) {
                           if (!uploaderViewController.isProcessing) {
                             return Center(
-                                child: !uploaderViewController.fileUploaded
-                                    ? UploadFileWidget(
-                                        uploaderViewController:
-                                            uploaderViewController)
-                                    : FileUploadedWidget(
-                                        uploaderViewController:
-                                            uploaderViewController,
-                                        mainScreenController:
-                                            mainScreenController));
+                              child: !uploaderViewController.fileUploaded
+                                  ? UploadFileWidget(
+                                      uploaderViewController:
+                                          uploaderViewController)
+                                  : FileUploadedWidget(
+                                      uploaderViewController:
+                                          uploaderViewController,
+                                      mainScreenController:
+                                          mainScreenController,
+                                      generatedQuiz:
+                                          uploaderViewController.generatedQuiz!,
+                                      navigateToQuizSolver:
+                                          navigateToQuizSolver,
+                                    ),
+                            );
                           } else {
                             return ProcessingWidget();
                           }
                         });
                       } else {
-                        return NoInternetScreen();
+                        return NoInternetWidget();
                       }
                     }
                     return Center(
@@ -156,6 +162,7 @@ class _MainScreenState extends State<MainScreen>
           child: FittedBox(
             child: FloatingActionButton(
               onPressed: () {
+                if (!mainScreenController.slideUpVisible) uploaderViewController.getServerStatus();
                 setState(() {
                   !mainScreenController.slideUpVisible
                       ? uploaderViewController.panelController.open()
@@ -191,7 +198,7 @@ class _MainScreenState extends State<MainScreen>
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(0.0, 0.1);
             const end = Offset.zero;
-            const curve = Curves.bounceIn;
+            const curve = Curves.easeIn;
             final tween =
                 Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
             final offsetAnimation = animation.drive(tween);

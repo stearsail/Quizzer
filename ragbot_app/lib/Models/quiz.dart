@@ -3,15 +3,18 @@ import 'dart:convert';
 class Quiz {
   int? quizId;
   String title;
+  String sourceFile;
 
   Quiz({
     this.quizId,
     required this.title,
+    required this.sourceFile
   });
 
   Map<String, dynamic> toMap() {
     return {
       'title': title,
+      'sourceFile': sourceFile,
     };
   }
 
@@ -19,6 +22,7 @@ class Quiz {
     return Quiz(
       quizId: map['quizId'] as int,
       title: map['title'] as String,
+      sourceFile: map['sourceFile'] as String,
     );
   }
 }

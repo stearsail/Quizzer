@@ -5,6 +5,9 @@ import shutil
 import process_pdf
 
 app = FastAPI()
+@app.get("/health-check")
+async def health_check():
+    return {'Status' : 'Running'}
 
 @app.post("/upload-pdf")
 async def upload_pdf(file: UploadFile = File(...)):

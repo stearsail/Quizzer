@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:ragbot_app/Controllers/mainscreen_controller.dart';
 import 'package:ragbot_app/Controllers/upload_controller.dart';
+import 'package:ragbot_app/Models/quiz.dart';
 
 class FileUploadedWidget extends StatefulWidget {
   final UploaderViewController uploaderViewController;
   final MainScreenController mainScreenController;
+  final Quiz generatedQuiz;
+  final Function(BuildContext, Quiz) navigateToQuizSolver;
 
   const FileUploadedWidget(
       {super.key,
       required this.uploaderViewController,
-      required this.mainScreenController});
+      required this.mainScreenController,
+      required this.generatedQuiz,
+      required this.navigateToQuizSolver});
 
   @override
   State<StatefulWidget> createState() => _FileUploadedWidgetState();
@@ -84,7 +89,11 @@ class _FileUploadedWidgetState extends State<FileUploadedWidget> {
                           ),
                         ),
                       ),
-                      onPressed: null,
+                      onPressed: () {
+                        widget.navigateToQuizSolver(
+                            context, widget.generatedQuiz);
+                        hideSlideUpPanel();
+                      },
                       child: const Text(
                         "Take now",
                         style: TextStyle(color: Color(0xFFF3F6F4)),
@@ -110,15 +119,7 @@ class _FileUploadedWidgetState extends State<FileUploadedWidget> {
                           ),
                         ),
                         onPressed: () {
-                          setState(() {
-                            widget.mainScreenController.turns += 0.5;
-                            widget.mainScreenController.slideUpVisible =
-                                !widget.mainScreenController.slideUpVisible;
-
-                            widget.uploaderViewController.panelController
-                                .close();
-                            widget.uploaderViewController.resetController();
-                          });
+                          hideSlideUpPanel();
                         },
                         child: const Text(
                           "Take later",
@@ -132,5 +133,16 @@ class _FileUploadedWidgetState extends State<FileUploadedWidget> {
             ),
           ),
         ]);
+  }
+
+  void hideSlideUpPanel() {
+    setState(() {
+      widget.mainScreenController.turns += 0.5;
+      widget.mainScreenController.slideUpVisible =
+          !widget.mainScreenController.slideUpVisible;
+
+      widget.uploaderViewController.panelController.close();
+      widget.uploaderViewController.resetController();
+    });
   }
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
-class NoInternetWidget extends StatelessWidget {
-  const NoInternetWidget({super.key});
+class NoServerConnectionWidget extends StatelessWidget {
+  const NoServerConnectionWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,13 +17,13 @@ class NoInternetWidget extends StatelessWidget {
                   height: 200,
                   width: 200,
                   child: Lottie.asset(
-                    "assets/no_internet.json",
+                    "assets/maintenance.json",
                   )),
             ),
             const Padding(
               padding: EdgeInsets.only(left: 30, right: 30),
               child: Text(
-                "Quizzer requires an internet connection to create a new quiz. Make sure you are connected to the internet!",
+                "Quizzer servers are currently under maintenance. Please try again later!",
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white, fontSize: 20),
               ),

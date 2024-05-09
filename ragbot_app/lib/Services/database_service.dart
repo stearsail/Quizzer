@@ -23,14 +23,16 @@ class DatabaseService {
   Future<Database> initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
-
+    //when necessary debug
+    // await deleteDatabase(path);
     return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future _createDB(Database db, int version) async {
     await db.execute('''
       CREATE TABLE Quizzes(quizId INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL);
+      title TEXT NOT NULL,
+      sourceFile TEXT NOT NULL);
     ''');
     await db.execute('''
       CREATE TABLE Questions(questionId INTEGER PRIMARY KEY AUTOINCREMENT,
