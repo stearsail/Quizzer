@@ -7,14 +7,14 @@ class FileUploadedWidget extends StatefulWidget {
   final UploaderViewController uploaderViewController;
   final MainScreenController mainScreenController;
   final Quiz generatedQuiz;
-  final Function(BuildContext, Quiz) navigateToQuizSolver;
+  final Function(BuildContext, Quiz) navigateToQuizScreen;
 
   const FileUploadedWidget(
       {super.key,
       required this.uploaderViewController,
       required this.mainScreenController,
       required this.generatedQuiz,
-      required this.navigateToQuizSolver});
+      required this.navigateToQuizScreen});
 
   @override
   State<StatefulWidget> createState() => _FileUploadedWidgetState();
@@ -90,7 +90,7 @@ class _FileUploadedWidgetState extends State<FileUploadedWidget> {
                         ),
                       ),
                       onPressed: () {
-                        widget.navigateToQuizSolver(
+                        widget.navigateToQuizScreen(
                             context, widget.generatedQuiz);
                         hideSlideUpPanel();
                       },

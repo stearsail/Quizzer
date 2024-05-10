@@ -7,12 +7,12 @@ import 'package:ragbot_app/Views/no_quizzes_widget.dart';
 
 class QuizzesWidget extends StatefulWidget {
   final MainScreenController mainScreenController;
-  final Function(BuildContext, Quiz) navigateToQuizSolver;
+  final Function(BuildContext, Quiz) navigateToQuizScreen;
 
   const QuizzesWidget(
       {super.key,
       required this.mainScreenController,
-      required this.navigateToQuizSolver});
+      required this.navigateToQuizScreen});
 
   @override
   State<StatefulWidget> createState() => _QuizzesWidgetState();
@@ -57,7 +57,7 @@ class _QuizzesWidgetState extends State<QuizzesWidget> {
                       children: [
                         SlidableAction(
                           onPressed: (context) =>
-                              widget.navigateToQuizSolver(context, quiz),
+                              widget.navigateToQuizScreen(context, quiz),
                           icon: Icons.edit_square,
                           label: 'Solve',
                           backgroundColor: Colors.blue,

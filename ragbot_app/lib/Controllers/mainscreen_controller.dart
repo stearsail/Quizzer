@@ -21,11 +21,6 @@ class MainScreenController extends ChangeNotifier {
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   Future<void> loadList() async {
     final listToAdd = await dbService.getAllQuizzes();
     listEmpty = listToAdd.isEmpty;

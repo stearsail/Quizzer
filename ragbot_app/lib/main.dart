@@ -3,6 +3,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:ragbot_app/Controllers/mainscreen_controller.dart';
+import 'package:ragbot_app/Controllers/quiz_controller.dart';
 import 'package:ragbot_app/Controllers/upload_controller.dart';
 import 'package:ragbot_app/Models/quiz.dart';
 import 'package:ragbot_app/Services/connectivity_service.dart';
@@ -10,7 +11,7 @@ import 'package:ragbot_app/Themes/dark_theme.dart';
 import 'package:ragbot_app/Views/file_uploaded_widget.dart';
 import 'package:ragbot_app/Views/no_internet_screen.dart';
 import 'package:ragbot_app/Views/processing_widget.dart';
-import 'package:ragbot_app/Views/quiz_solver_screen.dart';
+import 'package:ragbot_app/Views/quiz_screen.dart';
 import 'package:ragbot_app/Views/quizzes_widget.dart';
 import 'package:ragbot_app/Views/upload_file_widget.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -70,7 +71,7 @@ class _MainScreenState extends State<MainScreen>
             builder: (context, mainScreenController, child) {
               return QuizzesWidget(
                 mainScreenController: mainScreenController,
-                navigateToQuizSolver: navigateToQuizSolver,
+                navigateToQuizScreen: navigateToQuizScreen,
               );
             },
           ),
@@ -110,8 +111,8 @@ class _MainScreenState extends State<MainScreen>
                                           mainScreenController,
                                       generatedQuiz:
                                           uploaderViewController.generatedQuiz!,
-                                      navigateToQuizSolver:
-                                          navigateToQuizSolver,
+                                      navigateToQuizScreen:
+                                          navigateToQuizScreen,
                                     ),
                             );
                           } else {
@@ -172,20 +173,23 @@ class _MainScreenState extends State<MainScreen>
     );
   }
 
-  void navigateToQuizSolver(BuildContext context, Quiz quiz) {
+  void navigateToQuizScreen(BuildContext context, Quiz quiz) {
     Navigator.of(context).push(
-      PageRouteBuilder(
-          pageBuilder: (context, aniamtion, secondaryAnimataion) =>
-              QuizSolverScreen(quiz: quiz),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(0.0, 0.1);
-            const end = Offset.zero;
-            const curve = Curves.easeIn;
-            final tween =
-                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-            final offsetAnimation = animation.drive(tween);
-            return SlideTransition(position: offsetAnimation, child: child);
-          }),
+      PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) {
+        QuizController controller = QuizController(quiz);
+        return ChangeNotifierProvider<QuizController>.value(
+          value: controller,
+          child: QuizScreen(),
+        );
+      }, transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(0.0, 0.1);
+        const end = Offset.zero;
+        const curve = Curves.easeIn;
+        final tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        final offsetAnimation = animation.drive(tween);
+        return SlideTransition(position: offsetAnimation, child: child);
+      }),
     );
   }
 }
