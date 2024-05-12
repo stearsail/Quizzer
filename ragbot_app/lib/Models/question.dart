@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:ragbot_app/Models/choice.dart';
+
 class Question {
   int? questionId;
   int quizId;
@@ -8,6 +10,8 @@ class Question {
       choices; // Each choice is a Map with 'choiceId' and 'choiceText'
   String correctChoice;
   String? selectedChoice;
+  
+  late List<Choice> choiceList = [];
 
   Question(
       {this.questionId,

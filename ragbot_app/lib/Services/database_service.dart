@@ -1,3 +1,4 @@
+import 'package:ragbot_app/Models/choice.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:ragbot_app/Models/quiz.dart';
@@ -61,7 +62,15 @@ class DatabaseService {
     final db = await database;
     final List<Map<String, dynamic>> maps =
         await db.query('Questions', where: 'quizId = ?', whereArgs: [quizId]);
-    return List.generate(maps.length, (i) => Question.fromMap(maps[i]));
+    List<Question> resultList = List.generate(maps.length, (i) => Question.fromMap(maps[i]));
+    for(var question in resultList){
+      for(var choice in question.choices){
+        var choiceId = choice["choiceId"]!;
+        var choiceText = choice["choiceText"]!;
+        question.choiceList.add(Choice(choiceId: choiceId, choiceText: choiceText, newIsSelected: false ));
+      }
+    }
+    return resultList;
   }
 
   Future<List<Quiz>> getAllQuizzes() async {

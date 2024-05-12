@@ -46,4 +46,45 @@ class QuizController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void navigateToNextQuestion() {}
+  void navigateToPreviousQuestion() {}
+  void submitQuiz() {}
+
+  showClosingQuizDialog(BuildContext context) {
+    Widget cancelButton = TextButton(
+      child: const Text("Cancel"),
+      onPressed: () {
+        Navigator.of(context).pop(); //pop dialog
+      },
+    );
+    Widget continueButton = TextButton(
+      child: const Text("Continue"),
+      onPressed: () {
+        Navigator.of(context).pop(); //pop dialog
+        Navigator.of(context).pop(); //pop quiz
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: const Text("Leaving quiz", style: TextStyle(fontSize: 20)),
+      content: const Text(
+        "If you leave now, all your answers will be lost. Are you sure you want to exit?",
+        style: TextStyle(fontSize: 20),
+      ),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 }

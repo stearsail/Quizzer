@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ragbot_app/Controllers/quiz_controller.dart';
 import 'package:ragbot_app/Models/question.dart';
-import 'package:ragbot_app/Services/database_service.dart';
 
 class QuizStarterWidget extends StatefulWidget {
+  const QuizStarterWidget({super.key});
+
   @override
   State<StatefulWidget> createState() => _QuizStarterWidgetState();
 }
