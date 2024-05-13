@@ -98,12 +98,19 @@ async def process_text(file):
     
     questions = []
 
-    questions.append(json.loads(await get_question(texts[0])))
     
-    questions_json = json.dumps(questions)
+    # questions.append(json.loads(await get_question(texts[0])))
+    c = 0
 
-    # for text in texts:
-    #     questions.append(json.loads(await get_question(text)))
+    for text in texts:
+        if(c==3):
+            break
+        else:
+            questions.append(json.loads(await get_question(text)))
+            c+=1
+
+
+    questions_json = json.dumps(questions)
 
     return questions_json
 

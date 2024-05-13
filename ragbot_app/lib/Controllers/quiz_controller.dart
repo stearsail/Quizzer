@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
+import 'package:ragbot_app/Models/choice.dart';
 import 'package:ragbot_app/Models/question.dart';
 import 'package:ragbot_app/Models/quiz.dart';
 import 'package:ragbot_app/Services/database_service.dart';
@@ -26,6 +28,29 @@ class QuizController extends ChangeNotifier {
   int get currentIndex => _currentIndex;
   set currentIndex(int value) {
     _currentIndex = value;
+    checkQuestionPosition();
+    checkQuestionButtons();
+    notifyListeners();
+  }
+
+  int _previousIndex = 0;
+  int get previousIndex => _previousIndex;
+  set previousIndex(int value) {
+    _previousIndex = value;
+    notifyListeners();
+  }
+
+  bool _isLastQuestion = false;
+  bool get isLastQuestion => _isLastQuestion;
+  set isLastQuestion(bool value) {
+    _isLastQuestion = value;
+    notifyListeners();
+  }
+
+  bool _isNextButtonDisabled = false;
+  bool get isNextButtonDisabled => _isNextButtonDisabled;
+  set isNextButtonDisabled(bool value) {
+    _isNextButtonDisabled = value;
     notifyListeners();
   }
 
@@ -40,51 +65,50 @@ class QuizController extends ChangeNotifier {
 
   void startQuiz() async {
     _questions = await dbService.getQuestionsForQuiz(quiz.quizId!);
-
     if (_questions.isNotEmpty) {
       _quizStarted = true;
+      currentIndex = 0;
       notifyListeners();
     }
   }
 
-  void navigateToNextQuestion() {}
-  void navigateToPreviousQuestion() {}
+  void navigateToNextQuestion() {
+    previousIndex = currentIndex;
+    if (currentIndex < questions.length) {
+      currentIndex += 1;
+      notifyListeners();
+    }
+  }
+
+  void navigateToPreviousQuestion() {
+    previousIndex = currentIndex;
+    if (currentIndex > 0) {
+      currentIndex -= 1;
+      notifyListeners();
+    }
+  }
+
   void submitQuiz() {}
 
-  showClosingQuizDialog(BuildContext context) {
-    Widget cancelButton = TextButton(
-      child: const Text("Cancel"),
-      onPressed: () {
-        Navigator.of(context).pop(); //pop dialog
-      },
-    );
-    Widget continueButton = TextButton(
-      child: const Text("Continue"),
-      onPressed: () {
-        Navigator.of(context).pop(); //pop dialog
-        Navigator.of(context).pop(); //pop quiz
-      },
-    );
+  void checkQuestionPosition() {
+    if (currentIndex == questions.length - 1) {
+      isLastQuestion = true;
+    } else {
+      isLastQuestion = false;
+    }
+  }
 
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: const Text("Leaving quiz", style: TextStyle(fontSize: 20)),
-      content: const Text(
-        "If you leave now, all your answers will be lost. Are you sure you want to exit?",
-        style: TextStyle(fontSize: 20),
-      ),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
+  void checkQuestionButtons() {
+    isNextButtonDisabled = questionAnswered(questions[currentIndex].choiceList);
+  }
 
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
+  bool questionAnswered(List<Choice> choiceList) {
+    for (var choice in choiceList) {
+      if (choice.isSelected) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

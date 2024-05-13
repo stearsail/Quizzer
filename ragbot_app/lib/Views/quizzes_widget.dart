@@ -119,6 +119,30 @@ Color getColorFromScore(String scoreStr) {
 
 void _confirmDeleteQuiz(
     BuildContext context, String title, int quizId, int index) {
+  Widget cancelButton = TextButton(
+    child: const Text(
+      'Cancel',
+      style: TextStyle(
+        color: Color(0xFF6738FF),
+        fontSize: 18,
+      ),
+    ),
+    onPressed: () => Navigator.of(context).pop(),
+  );
+  Widget deleteButton = TextButton(
+    child: const Text(
+      'Delete',
+      style: TextStyle(
+        color: Color.fromARGB(255, 224, 83, 73),
+        fontSize: 18,
+      ),
+    ),
+    onPressed: () {
+      Provider.of<MainScreenController>(context, listen: false)
+          .deleteQuiz(quizId, index);
+      Navigator.of(context).pop();
+    },
+  );
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -129,30 +153,8 @@ void _confirmDeleteQuiz(
             style: const TextStyle(fontSize: 18, height: 1.5),
           )),
       actions: [
-        TextButton(
-          child: const Text(
-            'Cancel',
-            style: TextStyle(
-              color: Color(0xFF6738FF),
-              fontSize: 18,
-            ),
-          ),
-          onPressed: () => Navigator.of(ctx).pop(),
-        ),
-        TextButton(
-          child: const Text(
-            'Delete',
-            style: TextStyle(
-              color: Color.fromARGB(255, 224, 83, 73),
-              fontSize: 18,
-            ),
-          ),
-          onPressed: () {
-            Provider.of<MainScreenController>(context, listen: false)
-                .deleteQuiz(quizId, index);
-            Navigator.of(ctx).pop();
-          },
-        )
+        deleteButton,
+        cancelButton,
       ],
     ),
   );
