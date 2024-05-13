@@ -19,6 +19,9 @@ class MainScreenController extends ChangeNotifier {
     GlobalStreams.quizStream.listen((quiz) {
       addQuiz(quiz);
     });
+    GlobalStreams.progressStream.listen((quiz) {
+      updateQuizProgress(quiz);
+    });
   }
 
   Future<void> loadList() async {
@@ -38,6 +41,12 @@ class MainScreenController extends ChangeNotifier {
   void addQuiz(Quiz quiz) {
     _quizzes.add(quiz);
     listKey.currentState?.insertItem(_quizzes.length - 1);
+    notifyListeners();
+  }
+
+  void updateQuizProgress(Quiz updatedQuiz) async {
+    var quizToUpdate = _quizzes.where((quiz) => quiz.quizId ==updatedQuiz.quizId).firstOrNull!;
+    quizToUpdate.progress = await dbService.calculateProgressForQuiz(quizToUpdate.quizId!);
     notifyListeners();
   }
 

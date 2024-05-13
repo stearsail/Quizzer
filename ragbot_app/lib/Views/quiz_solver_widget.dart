@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:ragbot_app/Controllers/quiz_controller.dart';
 import 'package:ragbot_app/Models/question.dart';
@@ -29,9 +28,10 @@ class _QuizSolverWidgetState extends State<QuizSolverWidget> {
               right: 30,
               top: 60,
               child: IconButton(
-                  icon: const Icon(Icons.exit_to_app, color: Colors.white),
+                  iconSize: 35,
+                  icon: const Icon(Icons.exit_to_app, color: Color.fromARGB(255, 224, 83, 73)),
                   onPressed: () {
-                    _confirmExitQuiz(context);
+                    quizController.confirmExitQuiz(context);
                   }),
             ),
             Stack(
@@ -72,7 +72,7 @@ class _QuizSolverWidgetState extends State<QuizSolverWidget> {
         ElevatedButton(
           onPressed: isNextButtonDisabled
               ? (isLastQuestion
-                  ? quizController.submitQuiz
+                  ? () => quizController.confirmSubmitQuiz(context)
                   : quizController.navigateToNextQuestion)
               : null,
           style: ElevatedButton.styleFrom(
@@ -85,49 +85,4 @@ class _QuizSolverWidgetState extends State<QuizSolverWidget> {
       ],
     );
   }
-}
-
-void _confirmExitQuiz(BuildContext context) {
-  Widget cancelButton = TextButton(
-    child: const Text(
-      "Cancel",
-      style: TextStyle(
-        color: Color(0xFF6738FF),
-        fontSize: 18,
-      ),
-    ),
-    onPressed: () {
-      Navigator.of(context).pop(); //pop dialog
-    },
-  );
-  Widget continueButton = TextButton(
-    child: const Text(
-      "Continue",
-      style: TextStyle(
-        color: Color.fromARGB(255, 224, 83, 73),
-        fontSize: 18,
-      ),
-    ),
-    onPressed: () {
-      Navigator.of(context).pop(); //pop dialog
-      Navigator.of(context).pop(); //pop quiz
-    },
-  );
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) => AlertDialog(
-      content: const Padding(
-        padding: EdgeInsets.only(top: 20),
-        child: Text(
-          "If you leave now, all your answers will be lost. Are you sure you want to exit?",
-          style: TextStyle(fontSize: 20, height: 1.5),
-        ),
-      ),
-      actions: [
-        continueButton,
-        cancelButton,
-      ],
-    ),
-  );
 }

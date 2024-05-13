@@ -103,10 +103,12 @@ async def process_text(file):
     c = 0
 
     for text in texts:
-        if(c==3):
+        if(c==5):
             break
         else:
-            questions.append(json.loads(await get_question(text)))
+            question = json.loads(await get_question(text))
+            print(question)
+            questions.append(question)
             c+=1
 
 

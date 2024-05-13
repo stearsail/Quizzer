@@ -62,12 +62,14 @@ class DatabaseService {
     final db = await database;
     final List<Map<String, dynamic>> maps =
         await db.query('Questions', where: 'quizId = ?', whereArgs: [quizId]);
-    List<Question> resultList = List.generate(maps.length, (i) => Question.fromMap(maps[i]));
-    for(var question in resultList){
-      for(var choice in question.choices){
+    List<Question> resultList =
+        List.generate(maps.length, (i) => Question.fromMap(maps[i]));
+    for (var question in resultList) {
+      for (var choice in question.choices) {
         var choiceId = choice["choiceId"]!;
         var choiceText = choice["choiceText"]!;
-        question.choiceList.add(Choice(choiceId: choiceId, choiceText: choiceText, newIsSelected: false ));
+        question.choiceList.add(Choice(
+            choiceId: choiceId, choiceText: choiceText, newIsSelected: false));
       }
     }
     return resultList;
@@ -101,9 +103,23 @@ class DatabaseService {
     return "${correctAnswers.length}/${questions.length} correct answers - Score: ${((correctAnswers.length / questions.length) * 100).floor()}%";
   }
 
-  // Future<void> updateQuestionChoice(int questionId, String choiceId) async {
-  //   final db = await database;
-  //   await db.update('Questions', {'selectedChoice': choiceId},
-  //       where: 'questionId = ?', whereArgs: [questionId]);
-  // }
+  Future<void> updateSolvedQuiz(int quizId, List<Question> questions) async {
+    try {
+      final db = await database;
+
+      //extract questions by quizId
+      for (var question in questions) {
+        var selectedChoice =
+            question.choiceList.where((x) => x.isSelected == true).firstOrNull;
+
+        //save selected choice and set the rest to false
+        await db.update(
+            'Questions', {'selectedChoice': selectedChoice!.choiceId},
+            where: 'questionId = ?', whereArgs: [question.questionId]);
+      }
+
+    } catch (e) {
+      print('Error submitting solved quiz: $e');
+    }
+  }
 }
