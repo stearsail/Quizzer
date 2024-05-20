@@ -26,7 +26,7 @@ class MainScreenController extends ChangeNotifier {
 
   Future<void> loadList() async {
     final listToAdd = await dbService.getAllQuizzes();
-    listEmpty = listToAdd.isEmpty;
+    listEmpty = listToAdd!.isEmpty;
     notifyListeners();
 
     for (var i = 0; i < listToAdd.length; i++) {
@@ -45,7 +45,7 @@ class MainScreenController extends ChangeNotifier {
   }
 
   void updateQuizProgress(Quiz updatedQuiz) async {
-    var quizToUpdate = _quizzes.where((quiz) => quiz.quizId ==updatedQuiz.quizId).firstOrNull!;
+    var quizToUpdate = _quizzes.where((quiz) => quiz.quizId == updatedQuiz.quizId).firstOrNull!;
     quizToUpdate.progress = await dbService.calculateProgressForQuiz(quizToUpdate.quizId!);
     notifyListeners();
   }

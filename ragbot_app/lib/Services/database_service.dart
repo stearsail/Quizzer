@@ -22,102 +22,181 @@ class DatabaseService {
     return _database!;
   }
 
-  Future<Database> initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-    //when necessary debug
-    // await deleteDatabase(path);
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+  Future<Database?> initDB(String filePath) async {
+    try {
+      final dbPath = await getDatabasesPath();
+      final path = join(dbPath, filePath);
+      //when necessary debug
+      await deleteDatabase(path);
+      return await openDatabase(path, version: 1, onCreate: _createDB);
+    } catch (e) {
+      print('Error submitting solved quiz: $e');
+      return null;
+    }
   }
 
   Future _createDB(Database db, int version) async {
-    await db.execute('''
+    try {
+      await db.execute('''
       CREATE TABLE Quizzes(quizId INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       sourceFile TEXT NOT NULL);
     ''');
-    await db.execute('''
+      await db.execute('''
       CREATE TABLE Questions(questionId INTEGER PRIMARY KEY AUTOINCREMENT,
       quizId INTEGER, 
       questionText TEXT NOT NULL, 
-      choices TEXT NOT NULL, 
-      correctChoice CHAR(1) NOT NULL,
-      selectedChoice CHAR(1),
       FOREIGN KEY(quizId) REFERENCES Quizzes(quizId) ON DELETE CASCADE);
       );
     ''');
+      await db.execute('''
+      CREATE TABLE Choices(choiceId INTEGER PRIMARY KEY AUTOINCREMENT,
+      questionId INTEGER, 
+      choiceText TEXT NOT NULL, 
+      isSelected INTEGER NOT NULL, 
+      isCorrectChoice INTEGER NOT NULL,
+      FOREIGN KEY(questionId) REFERENCES Questions(questionId) ON DELETE CASCADE);
+      );
+    ''');
+    } catch (e) {
+      print('Error submitting solved quiz: $e');
+    }
   }
 
-  Future<int> insertQuiz(Quiz quiz) async {
-    final db = await database;
-    return await db.insert('Quizzes', quiz.toMap());
+  Future<int?> insertQuiz(Quiz quiz) async {
+    try {
+      final db = await database;
+      return await db.insert('Quizzes', quiz.toMap());
+    } catch (e) {
+      print('Error submitting solved quiz: $e');
+      return null;
+    }
   }
 
-  Future<int> insertQuestion(Question question) async {
+  Future<int?> insertQuestion(Question question) async {
     final db = await database;
     return await db.insert('Questions', question.toMap());
   }
 
-  Future<List<Question>> getQuestionsForQuiz(int quizId) async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps =
-        await db.query('Questions', where: 'quizId = ?', whereArgs: [quizId]);
-    List<Question> resultList =
-        List.generate(maps.length, (i) => Question.fromMap(maps[i]));
-    for (var question in resultList) {
-      for (var choice in question.choices) {
-        var choiceId = choice["choiceId"]!;
-        var choiceText = choice["choiceText"]!;
-        question.choiceList.add(Choice(
-            choiceId: choiceId, choiceText: choiceText, newIsSelected: false));
+  Future<int?> insertChoice(Choice choice) async {
+    try {
+      final db = await database;
+      return await db.insert('Choices', choice.toMap());
+    } catch (e) {
+      print('Error submitting solved quiz: $e');
+      return null;
+    }
+  }
+
+  Future<List<Question>?> getQuestionsForQuiz(int quizId) async {
+    try {
+      final db = await database;
+      final List<Map<String, dynamic>> maps =
+          await db.query('Questions', where: 'quizId = ?', whereArgs: [quizId]);
+      List<Question> resultList =
+          List.generate(maps.length, (i) => Question.fromMap(maps[i]));
+      return resultList;
+    } catch (e) {
+      print('Error submitting solved quiz: $e');
+      return null;
+    }
+  }
+
+  Future<List<Choice>?> getChoicesForQuestion(int questionId) async {
+    try {
+      final db = await database;
+      final List<Map<String, dynamic>> maps = await db
+          .query('Choices', where: 'questionId = ?', whereArgs: [questionId]);
+      List<Choice> resultList =
+          List.generate(maps.length, (i) => Choice.fromMap(maps[i]));
+      return resultList;
+    } catch (e) {
+      print('Error submitting solved quiz: $e');
+      return null;
+    }
+  }
+
+  Future<List<Quiz>?> getAllQuizzes() async {
+    try {
+      final db = await database;
+      final List<Map<String, dynamic>> maps = await db.query('Quizzes');
+      List<Quiz> quizzes = [];
+      for (var map in maps) {
+        Quiz newQuiz = Quiz.fromMap(map);
+        newQuiz.questionList = await getQuestionsForQuiz(newQuiz.quizId!);
+        for (var question in newQuiz.questionList!) {
+          question.choiceList =
+              await getChoicesForQuestion(question.questionId!);
+        }
+        quizzes.add(newQuiz);
+      }
+      return quizzes;
+    } catch (e) {
+      print('Error submitting solved quiz: $e');
+      return null;
+    }
+  }
+
+  Future<Quiz?> getQuiz(int quizId) async {
+    try {
+      final db = await database;
+      final List<Map<String, dynamic>> queryResult = await db.query('Quizzes', where: 'quizId = ?', whereArgs: [quizId]);
+      final Map<String, dynamic>? map = queryResult.firstOrNull;
+      if(map == null) throw Exception("Failed to retrieve quiz by Id!");
+      
+      Quiz result = Quiz.fromMap(map);
+      result.questionList = await getQuestionsForQuiz(result.quizId!);
+      for(var question in result.questionList!){
+        question.choiceList = await getChoicesForQuestion(question.questionId!);
+      }
+
+      return result;
+    } catch (e) {
+      print('Error submitting solved quiz: $e');
+      return null;
+    }
+  }
+
+    Future<String> calculateProgressForQuiz(int quizId) async {
+    Quiz? quiz = await getQuiz(quizId);
+    int nrQuestions = quiz!.questionList!.length;
+    int correctAnswers = 0;
+
+    for(var question in quiz.questionList!){
+      for(var choice in question.choiceList!){
+        if (choice.isSelected == choice.isCorrectChoice){
+          correctAnswers++;
+          break;
+        }
       }
     }
-    return resultList;
+    return "${correctAnswers}/${nrQuestions} correct answers - Score: ${((correctAnswers / nrQuestions) * 100).floor()}%";
   }
 
-  Future<List<Quiz>> getAllQuizzes() async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('Quizzes');
-    List<Quiz> quizzes = [];
-    for (var map in maps) {
-      Quiz newQuiz = Quiz.fromMap(map);
-      newQuiz.progress = await calculateProgressForQuiz(newQuiz.quizId!);
-      quizzes.add(newQuiz);
-    }
-    return quizzes;
-  }
 
   Future<void> deleteQuiz(int quizId) async {
-    final db = await database;
-    await db.delete(
-      'Quizzes',
-      where: 'quizId = ?',
-      whereArgs: [quizId],
-    );
+    try {
+      final db = await database;
+      await db.delete(
+        'Quizzes',
+        where: 'quizId = ?',
+        whereArgs: [quizId],
+      );
+    } catch (e) {
+      print('Error submitting solved quiz: $e');
+    }
   }
 
-  Future<String> calculateProgressForQuiz(int quizId) async {
-    List<Question> questions = await getQuestionsForQuiz(quizId);
-    var correctAnswers = questions
-        .where((element) => element.selectedChoice == element.correctChoice);
-    return "${correctAnswers.length}/${questions.length} correct answers - Score: ${((correctAnswers.length / questions.length) * 100).floor()}%";
-  }
-
-  Future<void> updateSolvedQuiz(int quizId, List<Question> questions) async {
+  Future<void> updateSolvedQuiz(Quiz quiz) async {
     try {
       final db = await database;
 
-      //extract questions by quizId
-      for (var question in questions) {
-        var selectedChoice =
-            question.choiceList.where((x) => x.isSelected == true).firstOrNull;
-
-        //save selected choice and set the rest to false
-        await db.update(
-            'Questions', {'selectedChoice': selectedChoice!.choiceId},
-            where: 'questionId = ?', whereArgs: [question.questionId]);
+      for (var question in quiz.questionList!) {
+        for (var choice in question.choiceList!) {
+          await db.update('Choices', {'isSelected': choice.isSelected},
+              where: 'choiceId = ?', whereArgs: [choice.choiceId]);
+        }
       }
-
     } catch (e) {
       print('Error submitting solved quiz: $e');
     }

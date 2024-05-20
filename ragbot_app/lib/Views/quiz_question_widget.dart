@@ -25,7 +25,7 @@ class _QuizQuestionWidgetState extends State<QuizQuestionWidget> {
     final previousQuestionNr = quizController.previousIndex;
     final question = widget.questions[questionNr];
     List<Widget> choiceWidgets = [];
-    for (var choice in question.choiceList) {
+    for (var choice in question.choiceList!) {
       choiceWidgets.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 10),
@@ -34,18 +34,7 @@ class _QuizQuestionWidgetState extends State<QuizQuestionWidget> {
               Checkbox(
                 value: choice.isSelected,
                 onChanged: (bool? value) {
-                  setState(() {
-                    choice.isSelected = !choice.isSelected;
-                    if (choice.isSelected) {
-                      //if its been set to true, set all other to false
-                      for (var otherChoice in question.choiceList) {
-                        if (otherChoice != choice) {
-                          otherChoice.isSelected = false;
-                        }
-                      }
-                    }
                     quizController.checkQuestionButtons();
-                  });
                 },
                 fillColor: MaterialStateProperty.all(Colors.grey),
               ),

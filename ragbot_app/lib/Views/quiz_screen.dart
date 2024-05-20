@@ -24,7 +24,7 @@ class _QuizScreenState extends State<QuizScreen> {
         if (!quizController.quizStarted) {
           return QuizStarterWidget();
         } else {
-          return QuizSolverWidget(questions : quizController.questions);
+          return QuizSolverWidget(questions : quizController.quiz.questionList!);
         }
       },
     );

@@ -68,7 +68,7 @@ class UploaderViewController extends ChangeNotifier {
 
   Future<void> initQuizTitles() async {
     var quizzes = await dbService.getAllQuizzes();
-    quizTitles = quizzes.map((quiz) => quiz.title.toLowerCase()).toList();
+    quizTitles = quizzes!.map((quiz) => quiz.title.toLowerCase()).toList();
   }
 
   void validateTitleInput() async {
@@ -144,7 +144,7 @@ class UploaderViewController extends ChangeNotifier {
       var quiz = json.decode(responseBody);
       quizTitle = _capitalizeWords(titleInputController.text.trim());
       quizTitles!.add(quizTitle.toLowerCase());
-      await storeQuiz(quiz, quizTitle, uploadedFilePath!.split('/').last);
+      await storeGeneratedQuiz(quiz, quizTitle, uploadedFilePath!.split('/').last);
     } else {
       //temporar
       fileUploaded = true;
@@ -153,18 +153,32 @@ class UploaderViewController extends ChangeNotifier {
     isProcessing = false;
   }
 
-  Future<void> storeQuiz(
+  Future<void> storeGeneratedQuiz(
       String decodedJson, String quizTitle, String quizSourceFile) async {
-    Quiz newQuiz = Quiz(title: quizTitle, sourceFile: quizSourceFile);
-    int quizId = await dbService.insertQuiz(newQuiz);
-    newQuiz.quizId = quizId;
-    print("Inserted new quiz with ID: $quizId");
-    await storeGeneratedQuestions(decodedJson, quizId);
-    newQuiz.progress =
-        await dbService.calculateProgressForQuiz(newQuiz.quizId!);
-    GlobalStreams.addQuiz(
-        newQuiz); // use Global streamController to send new quiz for AnimatedList update in mainScreenController
-    generatedQuiz = newQuiz; //save current quiz
+    try {
+
+      //create quiz object
+      Quiz newQuiz = Quiz(title: quizTitle, sourceFile: quizSourceFile);
+
+      //store quiz in db
+      int? quizId = await dbService.insertQuiz(newQuiz);
+      if (quizId == null) throw Exception("Couldn't store quiz to database");
+      newQuiz.quizId = quizId;
+
+      //store questions in db
+      storeGeneratedQuestions(decodedJson, quizId);
+
+      //calculate quiz progress
+      newQuiz.progress = await dbService.calculateProgressForQuiz(newQuiz.quizId!);
+
+      //use Global streamController to send new quiz for AnimatedList update in mainScreenController
+      GlobalStreams.addQuiz(newQuiz);
+
+      generatedQuiz = newQuiz; //save current quiz
+      
+    } catch (e) {
+      print('Error submitting solved quiz: $e');
+    }
   }
 
   Future<void> storeGeneratedQuestions(String jsonData, int quizId) async {
@@ -176,10 +190,16 @@ class UploaderViewController extends ChangeNotifier {
         // deals with case when API response contains an empty json (where questions couldn't be generated)
         Question newQuestion = Question.fromJson(questionJson, quizId);
         var questionId = await dbService.insertQuestion(newQuestion);
-        print("New question inserted, ID: $questionId part of Quiz: $quizId");
+        await storeGeneratedChoices(questionJson, questionId!);
       }
     }
   }
+
+  Future<void> storeGeneratedChoices(String jsonData, int questionId) async{
+    
+  }
+
+
 
   String _capitalizeWords(String text) {
     List<String> words = text.split(' ');

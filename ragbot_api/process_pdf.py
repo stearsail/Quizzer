@@ -11,6 +11,7 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 if openai_api_key is None:
     raise ValueError("OPENAI_API_KEY env variable is not set.")
 
+STOP_SEQUENCES = ["\nInput: ", "Input: ","\nOutput: ", "Output: "]
 PROMPT_TEMPLATE = '''You are a multiple-choice question generator. You generate a single question based on a scientific text.
 If the text has no relevant information to base a question on, return an empty JSON.
 The output should be of the following format:
@@ -36,7 +37,7 @@ The output should be of the following format:
 
 Example: 
 
-Input : 
+Input: 
 Paris is the capital and most populous city of France. With an official estimated population of 2,102,650 residents as of 1 January 2023 in an area of more than 105 km2, Paris is the fourth-most populated city in the European Union and the 30th most densely populated city in the world in 2022.
 
 Output: 
@@ -73,7 +74,7 @@ prompt = PromptTemplate.from_template(template=PROMPT_TEMPLATE)
 model = ChatOpenAI(
     model='gpt-3.5-turbo',
     openai_api_key = openai_api_key,
-    
+    model_kwargs={"stop" : STOP_SEQUENCES}
 )
 
 chain = prompt | model
@@ -101,19 +102,21 @@ async def process_text(file):
     
     # questions.append(json.loads(await get_question(texts[0])))
     c = 0
-
     for text in texts:
-        if(c==5):
+        if c == 5:
             break
         else:
-            question = json.loads(await get_question(text))
-            print(question)
-            questions.append(question)
-            c+=1
-
+            question_str = await get_question(text)
+            print(f"Question {c+1} JSON String: {question_str}")
+            try:
+                question = json.loads(question_str)
+                print(f"Parsed Question {c+1}: {question}")
+                questions.append(question)
+            except json.JSONDecodeError as e:
+                print(f"Error parsing question {c+1}: {e}")
+            c += 1
 
     questions_json = json.dumps(questions)
-
     return questions_json
 
 async def get_question(text):

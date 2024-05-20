@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
 import 'package:ragbot_app/Controllers/stream_controller.dart';
 import 'package:ragbot_app/Models/choice.dart';
-import 'package:ragbot_app/Models/question.dart';
 import 'package:ragbot_app/Models/quiz.dart';
 import 'package:ragbot_app/Services/database_service.dart';
 
@@ -11,12 +9,6 @@ class QuizController extends ChangeNotifier {
 
   final Quiz _quiz;
   Quiz get quiz => _quiz;
-
-  List<Question> _questions = [];
-  List<Question> get questions => _questions;
-
-  bool _questionsLoaded = false;
-  bool get questionsLoaded => _questionsLoaded;
 
   bool _quizStarted = false;
   bool get quizStarted => _quizStarted;
@@ -57,27 +49,15 @@ class QuizController extends ChangeNotifier {
 
   QuizController(this._quiz);
 
-  Future<List<Question>> loadQuestions() async {
-    _questions = await dbService.getQuestionsForQuiz(_quiz.quizId!);
-    _questionsLoaded = true;
-    notifyListeners();
-    return _questions;
-  }
-
   void startQuiz() async {
-    _questions = await dbService.getQuestionsForQuiz(quiz.quizId!);
-    if (_questions.isNotEmpty) {
-      _quizStarted = true;
-      currentIndex = 0;
-      notifyListeners();
-    }
+    _quizStarted = true;
+    currentIndex = 0;
   }
 
   void navigateToNextQuestion() {
     previousIndex = currentIndex;
-    if (currentIndex < questions.length) {
+    if (currentIndex < quiz.questionList!.length) {
       currentIndex += 1;
-      notifyListeners();
     }
   }
 
@@ -85,20 +65,19 @@ class QuizController extends ChangeNotifier {
     previousIndex = currentIndex;
     if (currentIndex > 0) {
       currentIndex -= 1;
-      notifyListeners();
     }
   }
 
   void submitQuiz(BuildContext context) async {
     //save solved quiz to database
-    dbService.updateSolvedQuiz(_quiz.quizId!, questions);
+    dbService.updateSolvedQuiz(quiz);
     GlobalStreams.addProgressQuiz(quiz);
     notifyListeners();
     Navigator.of(context).pop();
   }
 
   void checkQuestionPosition() {
-    if (currentIndex == questions.length - 1) {
+    if (currentIndex == quiz.questionList!.length - 1) {
       isLastQuestion = true;
     } else {
       isLastQuestion = false;
@@ -106,7 +85,7 @@ class QuizController extends ChangeNotifier {
   }
 
   void checkQuestionButtons() {
-    isNextButtonDisabled = questionAnswered(questions[currentIndex].choiceList);
+    isNextButtonDisabled = questionAnswered(quiz.questionList![currentIndex].choiceList!);
   }
 
   bool questionAnswered(List<Choice> choiceList) {

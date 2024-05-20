@@ -36,7 +36,7 @@ class _QuizSolverWidgetState extends State<QuizSolverWidget> {
             ),
             Stack(
               children: [
-                QuizQuestionWidget(questions: quizController.questions),
+                QuizQuestionWidget(questions: quizController.quiz.questionList!),
                 Padding(
                   padding:
                       const EdgeInsets.only(left: 25, right: 25, bottom: 200),
