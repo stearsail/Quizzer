@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:ragbot_app/Controllers/quiz_controller.dart';
 import 'package:ragbot_app/Models/question.dart';
 import 'package:ragbot_app/Views/quiz_question_widget.dart';
+import 'package:ragbot_app/Views/quiz_result_widget.dart';
 
 class QuizSolverWidget extends StatefulWidget {
   final List<Question> questions;
@@ -21,38 +22,44 @@ class _QuizSolverWidgetState extends State<QuizSolverWidget> {
   @override
   Widget build(BuildContext build) {
     return Consumer<QuizController>(builder: (context, quizController, child) {
-      return Scaffold(
-        body: Stack(
-          children: [
-            Positioned(
-              right: 30,
-              top: 60,
-              child: IconButton(
-                  iconSize: 35,
-                  icon: const Icon(Icons.exit_to_app, color: Color.fromARGB(255, 224, 83, 73)),
-                  onPressed: () {
-                    quizController.confirmExitQuiz(context);
-                  }),
-            ),
-            Stack(
-              children: [
-                QuizQuestionWidget(questions: quizController.quiz.questionList!),
-                Padding(
-                  padding:
-                      const EdgeInsets.only(left: 25, right: 25, bottom: 200),
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: navigationButtons(
-                        quizController,
-                        quizController.isLastQuestion,
-                        quizController.isNextButtonDisabled),
-                  ),
-                )
-              ],
-            )
-          ],
-        ),
-      );
+      if (!quizController.quizEnded) {
+        return Scaffold(
+          body: Stack(
+            children: [
+              Positioned(
+                right: 30,
+                top: 60,
+                child: IconButton(
+                    iconSize: 35,
+                    icon: const Icon(Icons.exit_to_app,
+                        color: Color.fromARGB(255, 224, 83, 73)),
+                    onPressed: () {
+                      quizController.confirmExitQuiz(context);
+                    }),
+              ),
+              Stack(
+                children: [
+                  QuizQuestionWidget(
+                      questions: quizController.quiz.questionList!),
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(left: 25, right: 25, bottom: 200),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: navigationButtons(
+                          quizController,
+                          quizController.isLastQuestion,
+                          quizController.isNextButtonDisabled),
+                    ),
+                  )
+                ],
+              )
+            ],
+          ),
+        );
+      } else {
+        return QuizResultWidget(quiz: quizController.quiz);
+      }
     });
   }
 

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:ragbot_app/Controllers/mainscreen_controller.dart';
 import 'package:ragbot_app/Models/quiz.dart';
 import 'package:ragbot_app/Views/no_quizzes_widget.dart';
+import 'package:ragbot_app/Views/quiz_viewer.dart';
 
 class QuizzesWidget extends StatefulWidget {
   final MainScreenController mainScreenController;
@@ -51,7 +52,7 @@ class _QuizzesWidgetState extends State<QuizzesWidget> {
                   )))),
                   child: Slidable(
                     endActionPane: ActionPane(
-                      extentRatio: 0.6,
+                      extentRatio: 0.7,
                       motion: const StretchMotion(),
                       dragDismissible: true,
                       children: [
@@ -62,11 +63,12 @@ class _QuizzesWidgetState extends State<QuizzesWidget> {
                           label: 'Solve',
                           backgroundColor: Colors.blue,
                         ),
-                        const SlidableAction(
-                          onPressed: null,
+                        SlidableAction(
+                          onPressed: (context) =>
+                              navigateToResultScreen(context, quiz),
                           icon: Icons.visibility,
                           label: 'View',
-                          backgroundColor: Color(0xFF6738FF),
+                          backgroundColor: const Color(0xFF6738FF),
                         ),
                         SlidableAction(
                           onPressed: (_) => _confirmDeleteQuiz(
@@ -83,9 +85,9 @@ class _QuizzesWidgetState extends State<QuizzesWidget> {
                           style: const TextStyle(
                               fontSize: 20, color: Color(0xFFF3F6F4))),
                       subtitle: Text(
-                        quiz.progress!,
+                        quiz.progress,
                         style:
-                            TextStyle(color: getColorFromScore(quiz.progress!)),
+                            TextStyle(color: getColorFromScore(quiz.progress)),
                       ),
                     ),
                   ),
@@ -95,6 +97,22 @@ class _QuizzesWidgetState extends State<QuizzesWidget> {
           );
         }
       },
+    );
+  }
+
+  void navigateToResultScreen(BuildContext context, Quiz quiz) {
+    Navigator.of(context).push(
+      PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) {
+        return QuizViewer(quiz: quiz);
+      }, transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(0.0, 1.0);
+        const end = Offset.zero;
+        const curve = Curves.easeIn;
+        final tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        final offsetAnimation = animation.drive(tween);
+        return SlideTransition(position: offsetAnimation, child: child);
+      }),
     );
   }
 }

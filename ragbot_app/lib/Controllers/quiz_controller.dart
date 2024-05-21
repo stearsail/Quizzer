@@ -7,13 +7,24 @@ import 'package:ragbot_app/Services/database_service.dart';
 class QuizController extends ChangeNotifier {
   final DatabaseService dbService = DatabaseService();
 
-  final Quiz _quiz;
+  Quiz _quiz;
   Quiz get quiz => _quiz;
+  set quiz(Quiz value) {
+    _quiz = value;
+    notifyListeners();
+  }
 
   bool _quizStarted = false;
   bool get quizStarted => _quizStarted;
   set quizStarted(bool value) {
     _quizStarted = value;
+    notifyListeners();
+  }
+
+  bool _quizEnded = false;
+  bool get quizEnded => _quizEnded;
+  set quizEnded(bool value) {
+    _quizEnded = value;
     notifyListeners();
   }
 
@@ -70,10 +81,12 @@ class QuizController extends ChangeNotifier {
 
   void submitQuiz(BuildContext context) async {
     //save solved quiz to database
-    dbService.updateSolvedQuiz(quiz);
+    await dbService.updateSolvedQuiz(quiz);
+    quiz.progress = await dbService.calculateProgressForQuiz(quiz.quizId!);
     GlobalStreams.addProgressQuiz(quiz);
     notifyListeners();
-    Navigator.of(context).pop();
+    quizEnded = true;
+    // Navigator.of(context).pop();
   }
 
   void checkQuestionPosition() {
@@ -85,7 +98,8 @@ class QuizController extends ChangeNotifier {
   }
 
   void checkQuestionButtons() {
-    isNextButtonDisabled = questionAnswered(quiz.questionList![currentIndex].choiceList!);
+    isNextButtonDisabled =
+        questionAnswered(quiz.questionList![currentIndex].choiceList!);
   }
 
   bool questionAnswered(List<Choice> choiceList) {
@@ -147,7 +161,7 @@ class QuizController extends ChangeNotifier {
       child: const Text(
         "Cancel",
         style: TextStyle(
-          color:Color.fromARGB(255, 224, 83, 73),
+          color: Color.fromARGB(255, 224, 83, 73),
           fontSize: 18,
         ),
       ),

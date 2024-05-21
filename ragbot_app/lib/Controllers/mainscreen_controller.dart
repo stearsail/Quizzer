@@ -5,13 +5,24 @@ import 'package:ragbot_app/Services/database_service.dart';
 
 class MainScreenController extends ChangeNotifier {
   final DatabaseService dbService = DatabaseService();
-  final List<Quiz> _quizzes = [];
+  List<Quiz> _quizzes = [];
   bool slideUpVisible = false; //variables that involve animations
   double turns = 0.0;
   bool listEmpty = false;
   final panelAnimationDuration = const Duration(milliseconds: 300);
 
   List<Quiz> get quizzes => _quizzes;
+  set quizzes(List<Quiz> quizzes) {
+    _quizzes = quizzes;
+    notifyListeners();
+  }
+
+  // bool _fileUploaded = false;
+  // bool get fileUploaded => _fileUploaded;
+  // set fileUploaded(bool fileUploaded) {
+  //   _fileUploaded = fileUploaded;
+  //   notifyListeners();
+  // }
 
   final GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
 
@@ -30,6 +41,8 @@ class MainScreenController extends ChangeNotifier {
     notifyListeners();
 
     for (var i = 0; i < listToAdd.length; i++) {
+      listToAdd[i].progress =
+          await dbService.calculateProgressForQuiz(listToAdd[i].quizId!);
       await Future.delayed(const Duration(milliseconds: 500), () {
         _quizzes.add(listToAdd[i]);
         listKey.currentState?.insertItem(i);
@@ -41,12 +54,16 @@ class MainScreenController extends ChangeNotifier {
   void addQuiz(Quiz quiz) {
     _quizzes.add(quiz);
     listKey.currentState?.insertItem(_quizzes.length - 1);
+    listEmpty = false;
     notifyListeners();
   }
 
   void updateQuizProgress(Quiz updatedQuiz) async {
-    var quizToUpdate = _quizzes.where((quiz) => quiz.quizId == updatedQuiz.quizId).firstOrNull!;
-    quizToUpdate.progress = await dbService.calculateProgressForQuiz(quizToUpdate.quizId!);
+    var quizToUpdate = _quizzes
+        .where((quiz) => quiz.quizId == updatedQuiz.quizId)
+        .firstOrNull!;
+    quizToUpdate.progress =
+        await dbService.calculateProgressForQuiz(quizToUpdate.quizId!);
     notifyListeners();
   }
 
@@ -60,6 +77,7 @@ class MainScreenController extends ChangeNotifier {
         (BuildContext context, Animation<double> animation) =>
             _buildRemovalAnimation(context, animation),
         duration: const Duration(milliseconds: 450));
+    if (quizzes.isEmpty) listEmpty = true;
     notifyListeners();
   }
 

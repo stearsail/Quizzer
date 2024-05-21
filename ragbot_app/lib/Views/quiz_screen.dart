@@ -22,9 +22,9 @@ class _QuizScreenState extends State<QuizScreen> {
     return Consumer<QuizController>(
       builder: (context, quizController, child) {
         if (!quizController.quizStarted) {
-          return QuizStarterWidget();
+          return const QuizStarterWidget();
         } else {
-          return QuizSolverWidget(questions : quizController.quiz.questionList!);
+          return QuizSolverWidget(questions: quizController.quiz.questionList!);
         }
       },
     );

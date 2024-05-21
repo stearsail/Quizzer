@@ -27,7 +27,7 @@ class DatabaseService {
       final dbPath = await getDatabasesPath();
       final path = join(dbPath, filePath);
       //when necessary debug
-      await deleteDatabase(path);
+      // await deleteDatabase(path);
       return await openDatabase(path, version: 1, onCreate: _createDB);
     } catch (e) {
       print('Error submitting solved quiz: $e');
@@ -108,7 +108,7 @@ class DatabaseService {
       final List<Map<String, dynamic>> maps = await db
           .query('Choices', where: 'questionId = ?', whereArgs: [questionId]);
       List<Choice> resultList =
-          List.generate(maps.length, (i) => Choice.fromMap(maps[i]));
+          List.generate(maps.length, (i) => Choice.fromMapWithId(maps[i]));
       return resultList;
     } catch (e) {
       print('Error submitting solved quiz: $e');
@@ -140,13 +140,14 @@ class DatabaseService {
   Future<Quiz?> getQuiz(int quizId) async {
     try {
       final db = await database;
-      final List<Map<String, dynamic>> queryResult = await db.query('Quizzes', where: 'quizId = ?', whereArgs: [quizId]);
+      final List<Map<String, dynamic>> queryResult =
+          await db.query('Quizzes', where: 'quizId = ?', whereArgs: [quizId]);
       final Map<String, dynamic>? map = queryResult.firstOrNull;
-      if(map == null) throw Exception("Failed to retrieve quiz by Id!");
-      
+      if (map == null) throw Exception("Failed to retrieve quiz by Id!");
+
       Quiz result = Quiz.fromMap(map);
       result.questionList = await getQuestionsForQuiz(result.quizId!);
-      for(var question in result.questionList!){
+      for (var question in result.questionList!) {
         question.choiceList = await getChoicesForQuestion(question.questionId!);
       }
 
@@ -157,14 +158,14 @@ class DatabaseService {
     }
   }
 
-    Future<String> calculateProgressForQuiz(int quizId) async {
+  Future<String> calculateProgressForQuiz(int quizId) async {
     Quiz? quiz = await getQuiz(quizId);
     int nrQuestions = quiz!.questionList!.length;
     int correctAnswers = 0;
 
-    for(var question in quiz.questionList!){
-      for(var choice in question.choiceList!){
-        if (choice.isSelected == choice.isCorrectChoice){
+    for (var question in quiz.questionList!) {
+      for (var choice in question.choiceList!) {
+        if (choice.isSelected && choice.isCorrectChoice) {
           correctAnswers++;
           break;
         }
@@ -172,7 +173,6 @@ class DatabaseService {
     }
     return "${correctAnswers}/${nrQuestions} correct answers - Score: ${((correctAnswers / nrQuestions) * 100).floor()}%";
   }
-
 
   Future<void> deleteQuiz(int quizId) async {
     try {

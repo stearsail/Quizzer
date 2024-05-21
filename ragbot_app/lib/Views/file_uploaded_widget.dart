@@ -80,8 +80,8 @@ class _FileUploadedWidgetState extends State<FileUploadedWidget> {
                     child: FittedBox(
                         child: TextButton(
                       style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.all<Color>(Color(0xFF5DC461)),
+                        backgroundColor: MaterialStateProperty.all<Color>(
+                            const Color(0xFF5DC461)),
                         shape:
                             MaterialStateProperty.all<RoundedRectangleBorder>(
                           RoundedRectangleBorder(

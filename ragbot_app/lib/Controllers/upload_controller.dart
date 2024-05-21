@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:ragbot_app/Controllers/stream_controller.dart';
+import 'package:ragbot_app/Models/choice.dart';
 import 'package:ragbot_app/Models/quiz.dart';
 import 'package:ragbot_app/Models/question.dart';
 import 'package:ragbot_app/Services/database_service.dart';
@@ -53,6 +54,7 @@ class UploaderViewController extends ChangeNotifier {
   String get quizTitle => _quizTitle;
   set quizTitle(String quizTitle) {
     _quizTitle = quizTitle;
+    notifyListeners();
   }
 
   String? uploadedFilePath = '';
@@ -73,7 +75,7 @@ class UploaderViewController extends ChangeNotifier {
 
   void validateTitleInput() async {
     if (quizTitles == null || quizTitles!.isEmpty) await initQuizTitles();
-    String input = titleInputController.text;
+    String input = titleInputController.text.trim();
     if (input.isEmpty || input.length < 3) {
       textErrorMessage = "Title must be at least 3 characters long";
       isButtonEnabled = false;
@@ -144,7 +146,8 @@ class UploaderViewController extends ChangeNotifier {
       var quiz = json.decode(responseBody);
       quizTitle = _capitalizeWords(titleInputController.text.trim());
       quizTitles!.add(quizTitle.toLowerCase());
-      await storeGeneratedQuiz(quiz, quizTitle, uploadedFilePath!.split('/').last);
+      await storeGeneratedQuiz(
+          quiz, quizTitle, uploadedFilePath!.split('/').last);
     } else {
       //temporar
       fileUploaded = true;
@@ -156,9 +159,8 @@ class UploaderViewController extends ChangeNotifier {
   Future<void> storeGeneratedQuiz(
       String decodedJson, String quizTitle, String quizSourceFile) async {
     try {
-
       //create quiz object
-      Quiz newQuiz = Quiz(title: quizTitle, sourceFile: quizSourceFile);
+      Quiz? newQuiz = Quiz(title: quizTitle, sourceFile: quizSourceFile);
 
       //store quiz in db
       int? quizId = await dbService.insertQuiz(newQuiz);
@@ -166,16 +168,18 @@ class UploaderViewController extends ChangeNotifier {
       newQuiz.quizId = quizId;
 
       //store questions in db
-      storeGeneratedQuestions(decodedJson, quizId);
+      await storeGeneratedQuestions(decodedJson, quizId);
+
+      newQuiz = await dbService.getQuiz(quizId);
 
       //calculate quiz progress
-      newQuiz.progress = await dbService.calculateProgressForQuiz(newQuiz.quizId!);
+      newQuiz!.progress =
+          await dbService.calculateProgressForQuiz(newQuiz.quizId!);
 
       //use Global streamController to send new quiz for AnimatedList update in mainScreenController
       GlobalStreams.addQuiz(newQuiz);
 
       generatedQuiz = newQuiz; //save current quiz
-      
     } catch (e) {
       print('Error submitting solved quiz: $e');
     }
@@ -195,11 +199,18 @@ class UploaderViewController extends ChangeNotifier {
     }
   }
 
-  Future<void> storeGeneratedChoices(String jsonData, int questionId) async{
-    
+  Future<void> storeGeneratedChoices(
+      Map<String, dynamic> jsonData, int questionId) async {
+    //choiceId = "|"  choiceText = "|"
+    for (var choice in jsonData["choices"]) {
+      choice["isCorrectChoice"] =
+          choice["choiceId"] == jsonData["correctAnswer"] ? 1 : 0;
+      choice["isSelected"] = 0;
+      choice["questionId"] = questionId;
+      choice.remove('choiceId');
+      await dbService.insertChoice(Choice.fromMap(choice));
+    }
   }
-
-
 
   String _capitalizeWords(String text) {
     List<String> words = text.split(' ');

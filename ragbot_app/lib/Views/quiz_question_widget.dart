@@ -16,6 +16,11 @@ class _QuizQuestionWidgetState extends State<QuizQuestionWidget> {
   @override
   void initState() {
     super.initState();
+    for (var question in widget.questions) {
+      for (var choice in question.choiceList!) {
+        choice.isSelected = false;
+      }
+    }
   }
 
   @override
@@ -34,7 +39,15 @@ class _QuizQuestionWidgetState extends State<QuizQuestionWidget> {
               Checkbox(
                 value: choice.isSelected,
                 onChanged: (bool? value) {
-                    quizController.checkQuestionButtons();
+                  if (value! == true) {
+                    for (var otherChoice in question.choiceList!) {
+                      if (otherChoice != choice) {
+                        otherChoice.isSelected = false;
+                      }
+                    }
+                  }
+                  choice.isSelected = value;
+                  quizController.checkQuestionButtons();
                 },
                 fillColor: MaterialStateProperty.all(Colors.grey),
               ),
