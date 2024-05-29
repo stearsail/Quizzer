@@ -83,6 +83,7 @@ class QuizController extends ChangeNotifier {
     //save solved quiz to database
     await dbService.updateSolvedQuiz(quiz);
     quiz.progress = await dbService.calculateProgressForQuiz(quiz.quizId!);
+    quiz.wasTaken = true;
     GlobalStreams.addProgressQuiz(quiz);
     notifyListeners();
     quizEnded = true;

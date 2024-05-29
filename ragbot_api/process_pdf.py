@@ -1,9 +1,11 @@
 import fitz, pathlib, re, os, openai
 import pdfplumber
 import json
+from operator import itemgetter
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI 
-
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langchain.memory import ConversationBufferWindowMemory
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 openai_api_key = os.getenv('OPENAI_API_KEY')
@@ -11,9 +13,12 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 if openai_api_key is None:
     raise ValueError("OPENAI_API_KEY env variable is not set.")
 
-STOP_SEQUENCES = ["\nInput: ", "Input: ","\nOutput: ", "Output: "]
+STOP_SEQUENCES = ["\nInput: ","\nOutput: "]
 PROMPT_TEMPLATE = '''You are a multiple-choice question generator. You generate a single question based on a scientific text.
-If the text has no relevant information to base a question on, return an empty JSON.
+If the text has no relevant scientific information to base a question on, return an empty JSON.
+
+{history}
+
 The output should be of the following format:
 
 {{
@@ -67,6 +72,7 @@ Output:
 Input: {context}
 Output: 
 '''
+# memory = ConversationBufferWindowMemory(human_prefix="Input: ", ai_prefix="Output: ", k=1)
 
 prompt = PromptTemplate.from_template(template=PROMPT_TEMPLATE)
 
@@ -77,7 +83,10 @@ model = ChatOpenAI(
     model_kwargs={"stop" : STOP_SEQUENCES}
 )
 
-chain = prompt | model
+chain = ({
+    "context": RunnablePassthrough(),
+    "history" : RunnablePassthrough()}
+    | prompt | model)
 
 async def process_text(file):
 
@@ -98,40 +107,47 @@ async def process_text(file):
     texts = text_splitter.create_documents([text])
     
     questions = []
+    question_history = []
+    question_history_string =''
 
-    
-    # questions.append(json.loads(await get_question(texts[0])))
     c = 0
     for text in texts:
-        if c == 2:
+        if c == 10:
             break
         else:
-            question_str = await get_question(text)
-            print(f"Question {c+1} JSON String: {question_str}")
+            print (f"~~~~~~~~~~~~~~~~~PROMPT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n {prompt}")
+            print(f"~~~~~~~~~~~~~~~~~~~~~~~~~MEMORY~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n{question_history_string}" )
+            question_string = await get_question(text, question_history_string)
+            print(f"--------------------------------TEXT CONTENT----------------------------------------------\n{text}")
+            print(f"--------------------------------QUESTION--------------------------------------------------\nQuestion {c+1} JSON String: {question_string}")
             try:
-                question = json.loads(question_str)
-                print(f"Parsed Question {c+1}: {question}")
-                questions.append(question)
-            except json.JSONDecodeError as e:
+                question_json = json.loads(question_string)
+                print(f"____________________________PARSED QUESTION_________________________________________________________ \nParsed Question {c+1}: {question_json} ")
+                if not check_json(question_json):
+                    continue
+                # memory.save_context({"input": text.page_content}, {"output": question_str})
+                if(len(question_history)==10):
+                    question_history.pop(0)
+                question_history.append(question_json['questionText']+"\n")
+                questions.append(question_json)
+                c += 1
+                question_history_string = 'Avoid using the following questions:\n' + ''.join(question_history)
+            except (json.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError) as e:
                 print(f"Error parsing question {c+1}: {e}")
-            c += 1
+
 
     questions_json = json.dumps(questions)
     return questions_json
 
-async def get_question(text):
-    output = chain.invoke({"context" : text})
+async def get_question(text, question_history_string):
+    output = chain.invoke({"context" : text, "history" : question_history_string})
     return output.content # return without metadata
 
-
-# context = "Bitcoin is the first decentralized cryptocurrency. Nodes in the peer-to-peer bitcoin network verify transactions through cryptography and record them in a public distributed ledger, called a blockchain, without central oversight"
-
-# output = chain.invoke({"context" : context})
-# json_question = json.loads(output.content)
-# print(json_question["questionText"])
-# print(output)
-# print(len(text))
-# print(len(texts))
-# for doc in enumerate(texts, start=0):
-#     print("\n",doc[1].page_content.encode("utf-8"))
+def check_json(jsonObject):        
+    if(len(jsonObject) == 0):
+        return False
+    for _, value in jsonObject.items():
+        if not value:
+            return False
+    return True
 

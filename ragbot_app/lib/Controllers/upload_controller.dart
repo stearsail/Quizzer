@@ -160,7 +160,8 @@ class UploaderViewController extends ChangeNotifier {
       String decodedJson, String quizTitle, String quizSourceFile) async {
     try {
       //create quiz object
-      Quiz? newQuiz = Quiz(title: quizTitle, sourceFile: quizSourceFile);
+      Quiz? newQuiz =
+          Quiz(title: quizTitle, sourceFile: quizSourceFile, wasTaken: false);
 
       //store quiz in db
       int? quizId = await dbService.insertQuiz(newQuiz);

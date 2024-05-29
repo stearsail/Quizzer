@@ -9,23 +9,30 @@ class QuizViewer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: const Color(0xFF2E2E2E),
         appBar: AppBar(
+          scrolledUnderElevation: 0.0,
           automaticallyImplyLeading: false,
-          title: Padding(
-              padding: const EdgeInsets.only(left: 5),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(quiz.title),
-                  IconButton(
-                      iconSize: 30,
-                      icon: const Icon(Icons.exit_to_app,
-                          color: Color.fromARGB(255, 224, 83, 73)),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      }),
-                ],
-              )),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              FittedBox(
+                fit: BoxFit.fitWidth,
+                child: Text(
+                  quiz.title,
+                  softWrap: true,
+                  style: const TextStyle(fontSize: 20),
+                ),
+              ),
+              IconButton(
+                  iconSize: 30,
+                  icon: const Icon(Icons.exit_to_app,
+                      color: Color.fromARGB(255, 224, 83, 73)),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  }),
+            ],
+          ),
         ),
         body: ListView.builder(
           itemCount: quiz.questionList!.length,
@@ -53,26 +60,33 @@ class QuestionViewer extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              // Use Expanded instead of Flexible if you want the child to fill available space
+                child: Padding(
+              padding: const EdgeInsets.only(
+                left: 10,
+                right: 10,
+                bottom: 5,
+              ),
               child: Card(
                   shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero),
+                      borderRadius: BorderRadius.all(Radius.circular(10))),
                   color: choice.isCorrectChoice
                       ? const Color.fromARGB(120, 76, 175, 80)
                       : (choice.isSelected && !choice.isCorrectChoice)
                           ? const Color.fromARGB(80, 244, 67, 54)
-                          : const Color.fromARGB(98, 112, 110,
-                              110), // Ensure it has a different color from text
+                          : const Color.fromARGB(98, 112, 110, 110),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Text(
-                          choice.choiceText,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Text(
+                            choice.choiceText,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                            softWrap: true,
                           ),
                         ),
                       ),
@@ -93,34 +107,38 @@ class QuestionViewer extends StatelessWidget {
                       )
                     ],
                   )),
-            ),
+            )),
           ],
         ),
       );
     }).toList();
     return Center(
-        child: Card(
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-      color: const Color(0xFF3E3E3E),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Text(
-              "${index + 1}. ${question.questionText}",
-              textAlign: TextAlign.left,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
+        child: Padding(
+      padding: const EdgeInsets.only(top: 5, bottom: 5),
+      child: Card(
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10))),
+        color: const Color(0xFF3E3E3E),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(15),
+              child: Text(
+                "${index + 1}. ${question.questionText}",
+                textAlign: TextAlign.left,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                ),
               ),
             ),
-          ),
-          Column(
-            children: choiceWidgets,
-          )
-        ],
+            Column(
+              children: choiceWidgets,
+            )
+          ],
+        ),
       ),
     ));
   }

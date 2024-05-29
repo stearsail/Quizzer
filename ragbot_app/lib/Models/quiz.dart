@@ -5,6 +5,7 @@ class Quiz {
   int? quizId;
   String title;
   String sourceFile;
+  bool wasTaken;
 
   //at runtime
   late List<Question>? questionList;
@@ -23,12 +24,14 @@ class Quiz {
     this.quizId,
     required this.title,
     required this.sourceFile,
+    required this.wasTaken,
   });
 
   Map<String, dynamic> toMap() {
     return {
       'title': title,
       'sourceFile': sourceFile,
+      'wasTaken': wasTaken == true ? 1 : 0,
     };
   }
 
@@ -37,6 +40,7 @@ class Quiz {
       quizId: map['quizId'] as int,
       title: map['title'] as String,
       sourceFile: map['sourceFile'] as String,
+      wasTaken: map['wasTaken'] as int == 1,
     );
   }
 

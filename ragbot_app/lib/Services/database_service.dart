@@ -40,7 +40,8 @@ class DatabaseService {
       await db.execute('''
       CREATE TABLE Quizzes(quizId INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
-      sourceFile TEXT NOT NULL);
+      sourceFile TEXT NOT NULL,
+      wasTaken INTEGER NOT NULL);
     ''');
       await db.execute('''
       CREATE TABLE Questions(questionId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -190,6 +191,9 @@ class DatabaseService {
   Future<void> updateSolvedQuiz(Quiz quiz) async {
     try {
       final db = await database;
+
+      db.update('Quizzes', {'wasTaken': true},
+          where: 'quizId = ?', whereArgs: [quiz.quizId]);
 
       for (var question in quiz.questionList!) {
         for (var choice in question.choiceList!) {

@@ -36,20 +36,23 @@ class _QuizQuestionWidgetState extends State<QuizQuestionWidget> {
           padding: const EdgeInsets.only(bottom: 10),
           child: Row(
             children: [
-              Checkbox(
-                value: choice.isSelected,
-                onChanged: (bool? value) {
-                  if (value! == true) {
-                    for (var otherChoice in question.choiceList!) {
-                      if (otherChoice != choice) {
-                        otherChoice.isSelected = false;
+              Transform.scale(
+                scale: 1.2,
+                child: Checkbox(
+                  value: choice.isSelected,
+                  onChanged: (bool? value) {
+                    if (value! == true) {
+                      for (var otherChoice in question.choiceList!) {
+                        if (otherChoice != choice) {
+                          otherChoice.isSelected = false;
+                        }
                       }
                     }
-                  }
-                  choice.isSelected = value;
-                  quizController.checkQuestionButtons();
-                },
-                fillColor: MaterialStateProperty.all(Colors.grey),
+                    choice.isSelected = value;
+                    quizController.checkQuestionButtons();
+                  },
+                  fillColor: MaterialStateProperty.all(Colors.grey),
+                ),
               ),
               Flexible(
                   child: Text(

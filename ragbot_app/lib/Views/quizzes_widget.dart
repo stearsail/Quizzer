@@ -52,7 +52,7 @@ class _QuizzesWidgetState extends State<QuizzesWidget> {
                   )))),
                   child: Slidable(
                     endActionPane: ActionPane(
-                      extentRatio: 0.7,
+                      extentRatio: quiz.wasTaken ? 0.7 : 0.45,
                       motion: const StretchMotion(),
                       dragDismissible: true,
                       children: [
@@ -63,13 +63,14 @@ class _QuizzesWidgetState extends State<QuizzesWidget> {
                           label: 'Solve',
                           backgroundColor: Colors.blue,
                         ),
-                        SlidableAction(
-                          onPressed: (context) =>
-                              navigateToResultScreen(context, quiz),
-                          icon: Icons.visibility,
-                          label: 'View',
-                          backgroundColor: const Color(0xFF6738FF),
-                        ),
+                        if (quiz.wasTaken)
+                          SlidableAction(
+                            onPressed: (context) =>
+                                navigateToResultScreen(context, quiz),
+                            icon: Icons.visibility,
+                            label: 'View',
+                            backgroundColor: const Color(0xFF6738FF),
+                          ),
                         SlidableAction(
                           onPressed: (_) => _confirmDeleteQuiz(
                               context, quiz.title, quiz.quizId!, index),
@@ -85,9 +86,11 @@ class _QuizzesWidgetState extends State<QuizzesWidget> {
                           style: const TextStyle(
                               fontSize: 20, color: Color(0xFFF3F6F4))),
                       subtitle: Text(
-                        quiz.progress,
-                        style:
-                            TextStyle(color: getColorFromScore(quiz.progress)),
+                        quiz.wasTaken ? quiz.progress : "Not attempted",
+                        style: TextStyle(
+                            color: quiz.wasTaken
+                                ? getColorFromScore(quiz.progress)
+                                : const Color(0xFF85D6F9)),
                       ),
                     ),
                   ),

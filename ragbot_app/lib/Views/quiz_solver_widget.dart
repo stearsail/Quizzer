@@ -37,22 +37,16 @@ class _QuizSolverWidgetState extends State<QuizSolverWidget> {
                       quizController.confirmExitQuiz(context);
                     }),
               ),
-              Stack(
-                children: [
-                  QuizQuestionWidget(
-                      questions: quizController.quiz.questionList!),
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(left: 25, right: 25, bottom: 200),
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: navigationButtons(
-                          quizController,
-                          quizController.isLastQuestion,
-                          quizController.isNextButtonDisabled),
-                    ),
-                  )
-                ],
+              QuizQuestionWidget(questions: quizController.quiz.questionList!),
+              Padding(
+                padding: const EdgeInsets.only(left: 35, right: 35, bottom: 75),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: navigationButtons(
+                      quizController,
+                      quizController.isLastQuestion,
+                      quizController.isNextButtonDisabled),
+                ),
               )
             ],
           ),
@@ -68,26 +62,40 @@ class _QuizSolverWidgetState extends State<QuizSolverWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        ElevatedButton(
-            onPressed: quizController.currentIndex == 0
-                ? null
-                : quizController.navigateToPreviousQuestion,
+        SizedBox(
+          height: 50,
+          width: 100,
+          child: ElevatedButton(
+              onPressed: quizController.currentIndex == 0
+                  ? null
+                  : quizController.navigateToPreviousQuestion,
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6738FF),
+                  disabledBackgroundColor: const Color(0x0FFFFFFF)),
+              child: const Icon(
+                Icons.arrow_back,
+                size: 27,
+              )),
+        ),
+        SizedBox(
+          height: 50,
+          width: 100,
+          child: ElevatedButton(
+            onPressed: isNextButtonDisabled
+                ? (isLastQuestion
+                    ? () => quizController.confirmSubmitQuiz(context)
+                    : quizController.navigateToNextQuestion)
+                : null,
             style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6738FF),
                 disabledBackgroundColor: const Color(0x0FFFFFFF)),
-            child: const Icon(Icons.arrow_back)),
-        ElevatedButton(
-          onPressed: isNextButtonDisabled
-              ? (isLastQuestion
-                  ? () => quizController.confirmSubmitQuiz(context)
-                  : quizController.navigateToNextQuestion)
-              : null,
-          style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6738FF),
-              disabledBackgroundColor: const Color(0x0FFFFFFF)),
-          child: isLastQuestion
-              ? const Text("Submit")
-              : const Icon(Icons.arrow_forward),
+            child: isLastQuestion
+                ? const Text("Submit")
+                : const Icon(
+                    Icons.arrow_forward,
+                    size: 27,
+                  ),
+          ),
         ),
       ],
     );
