@@ -13,6 +13,10 @@ class UploaderViewController extends ChangeNotifier {
   final DatabaseService dbService = DatabaseService();
   late PanelController panelController = PanelController();
   final TextEditingController titleInputController = TextEditingController();
+
+  late String cacheKey;
+  late int availableTexts = 10;
+
   late Quiz? generatedQuiz;
 
   bool _isButtonEnabled = false;
@@ -36,6 +40,13 @@ class UploaderViewController extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isAnalyzing = false;
+  bool get isAnalyzing => _isAnalyzing;
+  set isAnalyzing(bool isAnalyzing) {
+    _isAnalyzing = isAnalyzing;
+    notifyListeners();
+  }
+
   bool _serverRunning = true;
   bool get serverRunning => _serverRunning;
   set serverRunning(bool serverRunning) {
@@ -47,6 +58,20 @@ class UploaderViewController extends ChangeNotifier {
   bool get fileUploaded => _fileUploaded;
   set fileUploaded(bool fileUploaded) {
     _fileUploaded = fileUploaded;
+    notifyListeners();
+  }
+
+  int _selectedNrQuestions = 10;
+  int get selectedNrQuestions => _selectedNrQuestions;
+  set selectedNrQuestions(int selectedNrQuestions) {
+    _selectedNrQuestions = selectedNrQuestions;
+    notifyListeners();
+  }
+
+  bool _quizConfigured = false;
+  bool get quizConfigured => _quizConfigured;
+  set quizConfigured(bool quizConfigured) {
+    _quizConfigured = quizConfigured;
     notifyListeners();
   }
 
@@ -124,36 +149,71 @@ class UploaderViewController extends ChangeNotifier {
   Future<void> _uploadFileToServer() async {
     await getServerStatus();
     if (!serverRunning) return;
-    isProcessing = true;
+    isAnalyzing = true;
 
-    //upload file to fastapi endpoint
-    //define uri and multipart request
-    Uri uploadUri = Uri.parse('$_uri/upload-pdf');
-    http.MultipartRequest request = http.MultipartRequest('POST', uploadUri);
+    try {
+      Uri uploadUri = Uri.parse('$_uri/upload-pdf');
+      http.MultipartRequest request = http.MultipartRequest('POST', uploadUri);
 
-    //attach file to request {'filename' : '<the path>'}
-    request.files
-        .add(await http.MultipartFile.fromPath('file', uploadedFilePath!));
+      //attach file to request {'filename' : '<the path>'}
+      request.files
+          .add(await http.MultipartFile.fromPath('file', uploadedFilePath!));
 
-    //send request
-    http.StreamedResponse streamedResponse = await request.send();
+      //send request
+      http.StreamedResponse streamedResponse = await request.send();
 
-    if (streamedResponse.statusCode == 200) {
-      //is successful
-      fileUploaded = true;
-      var response = await http.Response.fromStream(streamedResponse);
-      String responseBody = response.body;
-      var quiz = json.decode(responseBody);
-      quizTitle = _capitalizeWords(titleInputController.text.trim());
-      quizTitles!.add(quizTitle.toLowerCase());
-      await storeGeneratedQuiz(
-          quiz, quizTitle, uploadedFilePath!.split('/').last);
-    } else {
-      //temporar
-      fileUploaded = true;
-      uploadedFilePath = "error";
+      if (streamedResponse.statusCode == 200) {
+        //is successful
+        fileUploaded = true;
+        var response = await http.Response.fromStream(streamedResponse);
+        String responseBody = response.body;
+        var responseData = json.decode(responseBody);
+        cacheKey = responseData['cache_key'];
+        availableTexts = responseData['available_texts'];
+        // await _generateQuiz();
+      } else {
+        print('Error uploading file to server');
+      }
+      isAnalyzing = false;
+    } catch (e) {
+      print('Exception when calling API to upload file: $e');
     }
-    isProcessing = false;
+  }
+
+  Future<void> generateQuiz() async {
+    await getServerStatus();
+    if (!serverRunning) return;
+    isProcessing = true;
+    try {
+      Uri processUri = Uri.parse('$_uri/process-text');
+
+      http.Request request = http.Request('POST', processUri)
+        ..headers.addAll({'Content-Type': 'application/json'})
+        ..body = json.encode(
+            {'cache_key': cacheKey, 'question_count': selectedNrQuestions});
+
+      // Send the request and wait for the streamed response
+      http.StreamedResponse streamedResponse = await request.send();
+
+      if (streamedResponse.statusCode == 200) {
+        //is successful
+        var response = await http.Response.fromStream(streamedResponse);
+        String responseBody = response.body;
+        var quiz = json.decode(responseBody);
+        quizTitle = _capitalizeWords(titleInputController.text.trim());
+        quizTitles!.add(quizTitle.toLowerCase());
+        await storeGeneratedQuiz(
+            quiz, quizTitle, uploadedFilePath!.split('/').last);
+      } else {
+        //temporary
+        fileUploaded = true;
+        uploadedFilePath = "error";
+      }
+      quizConfigured = true;
+      isProcessing = false;
+    } catch (e) {
+      print("Exception when calling API to generate quiz: $e");
+    }
   }
 
   Future<void> storeGeneratedQuiz(
@@ -229,6 +289,7 @@ class UploaderViewController extends ChangeNotifier {
     // Reset file-related flags
     fileUploaded = false;
     isProcessing = false;
+    isAnalyzing = false;
     serverRunning = true;
     uploadedFilePath = null;
 
@@ -239,6 +300,7 @@ class UploaderViewController extends ChangeNotifier {
     // Reset the quiz and questions
     _quizTitle = '';
     generatedQuiz = null;
+    quizConfigured = false;
 
     // Clear the text field's content
     titleInputController.clear();

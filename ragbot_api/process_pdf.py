@@ -88,8 +88,8 @@ chain = ({
     "history" : RunnablePassthrough()}
     | prompt | model)
 
-async def process_text(file):
-
+async def determine_questions(file):
+    
     # Using pdfplumber to open and read PDF file in-memory
     with pdfplumber.open(file.file) as pdf:
         text = ''
@@ -98,13 +98,17 @@ async def process_text(file):
             text += page.extract_text() + "\n"  # Adding a newline character after each page's text
 
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size = len(text)/25,
+        chunk_size = int(len(text)/25),
         chunk_overlap = 150,
         length_function = len,
         is_separator_regex=False,
     )
 
     texts = text_splitter.create_documents([text])
+    return texts
+    
+
+async def process_text(texts, question_count):
     
     questions = []
     question_history = []
@@ -112,17 +116,17 @@ async def process_text(file):
 
     c = 0
     for text in texts:
-        if c == 10:
+        if c == question_count:
             break
         else:
-            print (f"~~~~~~~~~~~~~~~~~PROMPT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n {prompt}")
-            print(f"~~~~~~~~~~~~~~~~~~~~~~~~~MEMORY~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n{question_history_string}" )
+            # print (f"~~~~~~~~~~~~~~~~~PROMPT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n {prompt}")
+            # print(f"~~~~~~~~~~~~~~~~~~~~~~~~~MEMORY~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n{question_history_string}" )
             question_string = await get_question(text, question_history_string)
-            print(f"--------------------------------TEXT CONTENT----------------------------------------------\n{text}")
-            print(f"--------------------------------QUESTION--------------------------------------------------\nQuestion {c+1} JSON String: {question_string}")
+            # print(f"--------------------------------TEXT CONTENT----------------------------------------------\n{text}")
+            # print(f"--------------------------------QUESTION--------------------------------------------------\nQuestion {c+1} JSON String: {question_string}")
             try:
                 question_json = json.loads(question_string)
-                print(f"____________________________PARSED QUESTION_________________________________________________________ \nParsed Question {c+1}: {question_json} ")
+                # print(f"____________________________PARSED QUESTION_________________________________________________________ \nParsed Question {c+1}: {question_json} ")
                 if not check_json(question_json):
                     continue
                 # memory.save_context({"input": text.page_content}, {"output": question_str})
@@ -133,7 +137,8 @@ async def process_text(file):
                 c += 1
                 question_history_string = 'Avoid using the following questions:\n' + ''.join(question_history)
             except (json.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError) as e:
-                print(f"Error parsing question {c+1}: {e}")
+                # print(f"Error parsing question {c+1}: {e}")
+                pass
 
 
     questions_json = json.dumps(questions)

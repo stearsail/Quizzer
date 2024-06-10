@@ -8,9 +8,9 @@ import 'package:ragbot_app/Controllers/upload_controller.dart';
 import 'package:ragbot_app/Models/quiz.dart';
 import 'package:ragbot_app/Services/connectivity_service.dart';
 import 'package:ragbot_app/Themes/dark_theme.dart';
-import 'package:ragbot_app/Views/file_uploaded_widget.dart';
+import 'package:ragbot_app/Views/analyzing_widget.dart';
 import 'package:ragbot_app/Views/no_internet_screen.dart';
-import 'package:ragbot_app/Views/processing_widget.dart';
+import 'package:ragbot_app/Views/quiz_config_widget.dart';
 import 'package:ragbot_app/Views/quiz_screen.dart';
 import 'package:ragbot_app/Views/quizzes_widget.dart';
 import 'package:ragbot_app/Views/upload_file_widget.dart';
@@ -64,7 +64,14 @@ class _MainScreenState extends State<MainScreen>
     final panelHeightOpen = MediaQuery.of(context).size.height * 0.45;
     return Scaffold(
       backgroundColor: const Color(0xFF3E3E3E),
-      appBar: AppBar(title: const Text('Main screen')),
+      appBar: AppBar(
+          title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Quizzer'),
+          SizedBox(height: 80, child: Image.asset('assets/cat_logo_1152.png'))
+        ],
+      )),
       body: Stack(
         children: [
           Consumer<MainScreenController>(
@@ -98,25 +105,22 @@ class _MainScreenState extends State<MainScreen>
                                 MainScreenController>(
                             builder: (context, uploaderViewController,
                                 mainScreenController, child) {
-                          if (!uploaderViewController.isProcessing) {
+                          if (!uploaderViewController.isAnalyzing) {
                             return Center(
-                              child: !uploaderViewController.fileUploaded
-                                  ? UploadFileWidget(
-                                      uploaderViewController:
-                                          uploaderViewController)
-                                  : FileUploadedWidget(
-                                      uploaderViewController:
-                                          uploaderViewController,
-                                      mainScreenController:
-                                          mainScreenController,
-                                      generatedQuiz:
-                                          uploaderViewController.generatedQuiz!,
-                                      navigateToQuizScreen:
-                                          navigateToQuizScreen,
-                                    ),
-                            );
+                                child: !uploaderViewController.fileUploaded
+                                    ? UploadFileWidget(
+                                        uploaderViewController:
+                                            uploaderViewController)
+                                    : QuizConfigWidget(
+                                        uploaderViewController:
+                                            uploaderViewController,
+                                        mainScreenController:
+                                            mainScreenController,
+                                        navigateToQuizScreen:
+                                            navigateToQuizScreen,
+                                      ));
                           } else {
-                            return ProcessingWidget();
+                            return AnalyzingWidget();
                           }
                         });
                       } else {
@@ -144,8 +148,9 @@ class _MainScreenState extends State<MainScreen>
           child: FittedBox(
             child: FloatingActionButton(
               onPressed: () {
-                if (!mainScreenController.slideUpVisible)
+                if (!mainScreenController.slideUpVisible) {
                   uploaderViewController.getServerStatus();
+                }
                 setState(() {
                   !mainScreenController.slideUpVisible
                       ? uploaderViewController.panelController.open()
