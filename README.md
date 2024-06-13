@@ -9,13 +9,13 @@ FastAPI: The Flutter app communicates with the Python backend using FastAPI endp
 
 ## Usage example
 ### Uploading a PDF file:
-![](https://github.com/stearsail/Quizzer/tree/main/ragbot_app/readme_gifs/upload_file.gif)
+![Upload PDF](https://github.com/stearsail/Quizzer/tree/main/ragbot_app/readme_gifs/upload_file.gif)
 
-### electing a number of questions for the quiz to be generated:
-![](https://github.com/stearsail/Quizzer/tree/main/ragbot_app/readme_gifs/select_nr_questions.gif)
+### Selecting a number of questions for the quiz to be generated:
+![Select number of questions](https://github.com/stearsail/Quizzer/tree/main/ragbot_app/readme_gifs/select_nr_questions.gif)
 
 ### Solve the generated quiz:
-![](https://github.com/stearsail/Quizzer/tree/main/ragbot_app/readme_gifs/answer_questions.gif)
+![Solve quiz](https://github.com/stearsail/Quizzer/tree/main/ragbot_app/readme_gifs/answer_questions.gif)
 
 ### View results:
-![](https://github.com/stearsail/Quizzer/tree/main/ragbot_app/readme_gifs/view_quiz.gif)
+![View results](/readme_gifs/view_quiz.gif)
