@@ -11,14 +11,13 @@ It constructs and manages the workflow by defining prompt templates, passing con
 
 ## Usage example
 ### Uploading a PDF file:
-<img src="https://github.com/stearsail/Quizzer/blob/main/ragbot_app/readme_gifs/upload_file.gif" width="270" height="600"/>
+<img src="https://github.com/stearsail/Quizzer/blob/main/ragbot_app/readme_gifs/upload_file.gif" width="216" height="480"/>
 
 ### Selecting a number of questions for the quiz to be generated:
-<img src="https://github.com/stearsail/Quizzer/blob/main/ragbot_app/readme_gifs/select_nr_questions.gif" width="270" height="600"/>
-
+<img src="https://github.com/stearsail/Quizzer/blob/main/ragbot_app/readme_gifs/select_nr_questions.gif" width="216" height="480"/>
 
 ### Solve the generated quiz:
-<img src="https://github.com/stearsail/Quizzer/blob/main/ragbot_app/readme_gifs/answer_questions.gif" width="270" height="600"/>
+<img src="https://github.com/stearsail/Quizzer/blob/main/ragbot_app/readme_gifs/answer_questions.gif" width="216" height="480"/>
 
 ### View results:
-<img src="https://github.com/stearsail/Quizzer/blob/main/ragbot_app/readme_gifs/view_quiz.gif" width="270" height="600"/>
+<img src="https://github.com/stearsail/Quizzer/blob/main/ragbot_app/readme_gifs/view_quiz.gif" width="216" height="480"/>
