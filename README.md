@@ -15,7 +15,7 @@ FastAPI: The Flutter app communicates with the Python backend using FastAPI endp
 ![Select number of questions](https://github.com/stearsail/Quizzer/blob/main/ragbot_app/readme_gifs/select_nr_questions.gif)
 
 ### Solve the generated quiz:
-![Solve quiz](https://github.com/stearsail/Quizzer/blob/main/ragbot_app/readme_gifs/answer_questions.gif)
+<img src="https://github.com/stearsail/Quizzer/blob/main/ragbot_app/readme_gifs/answer_questions.gif" width="250" height="250"/>
 
 ### View results:
 ![View results](https://github.com/stearsail/Quizzer/blob/main/ragbot_app/readme_gifs/view_quiz.gif)
