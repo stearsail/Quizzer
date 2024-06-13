@@ -3,7 +3,7 @@
 This project is a mobile application that provides functionality for generating multiple-choice questions based on the content of a PDF file. 
 The application leverages a Python backend to utilize advanced natural language processing (NLP) capabilities using the OpenAI GPT-3.5-turbo model and the LangChain framework to generate contextually accurate questions.
 
-## Features
+## Tech stack
 ### Flutter framework
 The frontend of the application is built using Flutter framework. This provides an intuitive user interface for uploading PDFs and retrieving generated questions in multiple-choice format.
 ### FastAPI
